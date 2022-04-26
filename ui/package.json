@@ -1,0 +1,44 @@
+{
+  "name": "@taxme/ui",
+  "private": true,
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start",
+    "type-check": "tsc"
+  },
+  "dependencies": {
+    "@headlessui/react": "^1.6.0",
+    "@heroicons/react": "^1.0.6",
+    "next": "latest",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "tailwindcss": "^3.0.24"
+  },
+  "devDependencies": {
+    "@tailwindcss/aspect-ratio": "^0.4.0",
+    "@tailwindcss/forms": "^0.5.0",
+    "@tailwindcss/typography": "^0.5.2",
+    "@types/node": "^12.20.49",
+    "@types/react": "^17.0.44",
+    "@types/react-dom": "^17.0.16",
+    "autoprefixer": "^10.4.5",
+    "postcss": "^8.4.12",
+    "prettier": "^2.6.2",
+    "prettier-plugin-tailwindcss": "^0.1.10",
+    "typescript": "4.6.3"
+  },
+  "description": "This is a really simple project that shows the usage of Next.js with TypeScript.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nikravi/taxme.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nikravi/taxme/issues"
+  },
+  "homepage": "https://github.com/nikravi/taxme#readme"
+}

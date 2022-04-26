@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/nikravi/taxme#readme",
   "workspaces": [
-    "contracts"
+    "contracts",
+    "ui"
   ]
 }
