@@ -1,3 +1,12 @@
+# TaxMe
+
+commands:
+
+npm run compile
+npm hardhat deploy
+npm run test
+
+
 <br/>
 <p align="center">
 <a href="https://chain.link" target="_blank">

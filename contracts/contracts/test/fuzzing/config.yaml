@@ -9,6 +9,7 @@ cryticArgs:
   [
     "--solc-remaps",
     "@chainlink/contracts=/src/node_modules/@chainlink/contracts",
+    "@openzeppelin/contracts=/src/node_modules/@openzeppelin/contracts",
     "--solc-args",
     "--allow-paths /src/contracts",
   ]

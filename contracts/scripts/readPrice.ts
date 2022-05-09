@@ -6,8 +6,14 @@ import { BigNumber } from "ethers"
 import { PriceConsumerV3 } from "../typechain"
 
 async function readPrice(): Promise<void> {
-  const priceConsumerV3: PriceConsumerV3 = await ethers.getContract("PriceConsumerV3")
-  const price: BigNumber = await priceConsumerV3.getLatestPrice()
+  const PriceConsumerV3 = await ethers.getContractFactory("PriceConsumerV3")
+  const priceConsumerV3Contract = await PriceConsumerV3.deploy(
+    "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e"
+  )
+
+  await priceConsumerV3Contract.deployed()
+
+  const price: BigNumber = await priceConsumerV3Contract.getLatestPrice()
   console.log(price.toString())
 }
 

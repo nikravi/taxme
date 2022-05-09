@@ -98,7 +98,7 @@ const config: HardhatUserConfig = {
   },
   contractSizer: {
     runOnCompile: false,
-    only: ["APIConsumer", "KeepersCounter", "PriceConsumerV3", "RandomNumberConsumer"],
+    only: ["APIConsumer", "KeepersCounter", "PriceConsumerV3", "RandomNumberConsumer", "TaxMe"],
   },
   namedAccounts: {
     deployer: {
@@ -108,11 +108,20 @@ const config: HardhatUserConfig = {
     feeCollector: {
       default: 1,
     },
+    buyer: {
+      default: 4,
+    },
   },
   solidity: {
     compilers: [
       {
         version: "0.8.7",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 2000,
+          },
+        },
       },
       {
         version: "0.6.6",
