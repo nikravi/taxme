@@ -116,8 +116,6 @@ contract TaxMe is Ownable {
     address regionalTaxCollector = taxCollectors[companyAddress.state];
     _addTax(company, regionalTaxCollector, regionalAmount);
     address nationalTaxCollector = taxCollectors[companyAddress.country];
-    console.log("%s amount: %s", nationalTaxCollector, nationalAmount);
-    
     _addTax(company, nationalTaxCollector, nationalAmount);
   }
 
