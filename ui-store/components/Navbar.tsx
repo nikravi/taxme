@@ -1,20 +1,16 @@
 import * as React from 'react'
 import { Fragment, useEffect } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { MenuIcon, XIcon } from '@heroicons/react/outline'
+import { BellIcon, MenuIcon, XIcon } from '@heroicons/react/outline'
 import Link from 'next/link'
 import { classNames } from '../utils/utils'
 import { navigation } from '../utils/project'
 import { useMoralis } from 'react-moralis'
 import { useRouter } from 'next/router'
-import Image from 'next/image'
-import TMSymbol from '../images/taxme-symbol.svg'
-import TMLogo from '../images/taxme-logo.svg'
 
 const Navbar = () => {
   const { isAuthenticated, authenticate, user, account, logout } = useMoralis()
   const router = useRouter()
-  
   useEffect(() => {
     if (isAuthenticated) {
       console.log('isAuthenticated', user, account)
@@ -57,17 +53,15 @@ const Navbar = () => {
               </div>
               <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex-shrink-0 flex items-center">
-                  <Image 
+                  <img
                     className="block lg:hidden h-8 w-auto"
-                    src={TMSymbol}
-                    height={40}
-                    alt="TaxMe logo"
+                    src="https://tailwindui.com/img/logos/workflow-mark-indigo-500.svg"
+                    alt="Workflow"
                   />
-                  <Image 
+                  <img
                     className="hidden lg:block h-8 w-auto"
-                    src={TMLogo}
-                    height={40}
-                    alt="TaxMe logo"
+                    src="https://tailwindui.com/img/logos/workflow-logo-indigo-500-mark-white-text.svg"
+                    alt="Workflow"
                   />
                 </div>
                 <div className="hidden sm:block sm:ml-6">
@@ -76,7 +70,7 @@ const Navbar = () => {
                       <Link href={item.href} key={item.name}>
                         <a
                           className={classNames(
-                            router.pathname === item.href
+                            item.current
                               ? 'bg-gray-900 text-white'
                               : 'text-gray-300 hover:bg-gray-700 hover:text-white',
                             'px-3 py-2 rounded-md text-sm font-medium',
@@ -91,7 +85,13 @@ const Navbar = () => {
                 </div>
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                
+                <button
+                  type="button"
+                  className="bg-gray-800 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+                >
+                  <span className="sr-only">View notifications</span>
+                  <BellIcon className="h-6 w-6" aria-hidden="true" />
+                </button>
 
                 {!user ? <button
                   type="button"

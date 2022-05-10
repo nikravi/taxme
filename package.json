@@ -19,6 +19,7 @@
   "homepage": "https://github.com/nikravi/taxme#readme",
   "workspaces": [
     "contracts",
-    "ui"
+    "ui",
+    "ui-store"
   ]
 }

@@ -1,7 +1,6 @@
-# TaxMe 
+# Sample of a store, using stable coins for payments 
 
-Register company for sales tax processing, view sales data
-
+Pay for products in stable coins, automatically process sales taxes using TaxMe smart contract
 
 ## Notes
 

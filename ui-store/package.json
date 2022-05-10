@@ -1,7 +1,10 @@
 {
-  "name": "@taxme/ui",
+  "name": "@taxme/ui-store",
+  "version": "1.0.0",
+  "description": "sample e-commerce store",
+  "main": "index.js",
   "scripts": {
-    "dev": "next -p 3000",
+    "dev": "next -p 8080",
     "build": "next build",
     "start": "next start",
     "type-check": "tsc"
@@ -29,9 +32,6 @@
     "prettier-plugin-tailwindcss": "^0.1.10",
     "typescript": "4.6.3"
   },
-  "description": "TaxMe app: register company for sales taxes processing, view sales data",
-  "version": "1.0.0",
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nikravi/taxme.git"

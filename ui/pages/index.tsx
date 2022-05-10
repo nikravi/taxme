@@ -1,244 +1,176 @@
 import Link from 'next/link'
 import Layout from '../components/Layout'
-
-import { useState } from 'react'
-import { Disclosure, RadioGroup, Tab } from '@headlessui/react'
-import { StarIcon } from '@heroicons/react/solid'
-import { HeartIcon, MinusSmIcon, PlusSmIcon } from '@heroicons/react/outline'
-
-const product = {
-  name: 'Zip Tote Basket',
-  price: '$140',
-  rating: 4,
-  images: [
-    {
-      id: 1,
-      name: 'Angled view',
-      src: 'https://tailwindui.com/img/ecommerce-images/product-page-03-product-01.jpg',
-      alt: 'Angled front view with bag zipped and handles upright.',
-    },
-    // More images...
-  ],
-  colors: [
-    { name: 'Washed Black', bgColor: 'bg-gray-700', selectedColor: 'ring-gray-700' },
-    { name: 'White', bgColor: 'bg-white', selectedColor: 'ring-gray-400' },
-    { name: 'Washed Gray', bgColor: 'bg-gray-500', selectedColor: 'ring-gray-500' },
-  ],
-  description: `
-    <p>The Zip Tote Basket is the perfect midpoint between shopping tote and comfy backpack. With convertible straps, you can hand carry, should sling, or backpack this convenient and spacious bag. The zip top and durable canvas construction keeps your goods protected for all-day use.</p>
-  `,
-  details: [
-    {
-      name: 'Features',
-      items: [
-        'Multiple strap configurations',
-        'Spacious interior with top zip',
-        'Leather handle and tabs',
-        'Interior dividers',
-        'Stainless strap loops',
-        'Double stitched construction',
-        'Water-resistant',
-      ],
-    },
-    // More sections...
-  ],
-}
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ')
-}
+import { Fragment } from 'react'
+import { Popover, Transition } from '@headlessui/react'
+import { MenuIcon, XIcon } from '@heroicons/react/outline'
+import { ChevronRightIcon } from '@heroicons/react/solid'
 
 const IndexPage = () => {
-  const [selectedColor, setSelectedColor] = useState(product.colors[0])
 
-  return <Layout title="Store | TaxMe">
+  return <Layout title="The smart way to collect and pay your sales taxes | TaxMe">
 
-    <div className="bg-white">
-      <div className="max-w-2xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:max-w-7xl lg:px-8">
-        <div className="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start">
-          {/* Image gallery */}
-          <Tab.Group as="div" className="flex flex-col-reverse">
-            {/* Image selector */}
-            <div className="hidden mt-6 w-full max-w-2xl mx-auto sm:block lg:max-w-none">
-              <Tab.List className="grid grid-cols-4 gap-6">
-                {product.images.map((image) => (
-                  <Tab
-                    key={image.id}
-                    className="relative h-24 bg-white rounded-md flex items-center justify-center text-sm font-medium uppercase text-gray-900 cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring focus:ring-offset-4 focus:ring-opacity-50"
-                  >
-                    {({ selected }) => (
-                      <>
-                        <span className="sr-only">{image.name}</span>
-                        <span className="absolute inset-0 rounded-md overflow-hidden">
-                          <img src={image.src} alt="" className="w-full h-full object-center object-cover" />
-                        </span>
-                        <span
-                          className={classNames(
-                            selected ? 'ring-indigo-500' : 'ring-transparent',
-                            'absolute inset-0 rounded-md ring-2 ring-offset-2 pointer-events-none'
-                          )}
-                          aria-hidden="true"
-                        />
-                      </>
-                    )}
-                  </Tab>
-                ))}
-              </Tab.List>
-            </div>
+    <div className="bg-gray-800 ">
 
-            <Tab.Panels className="w-full aspect-w-1 aspect-h-1">
-              {product.images.map((image) => (
-                <Tab.Panel key={image.id}>
-                  <img
-                    src={image.src}
-                    alt={image.alt}
-                    className="w-full h-full object-center object-cover sm:rounded-lg"
-                  />
-                </Tab.Panel>
-              ))}
-            </Tab.Panels>
-          </Tab.Group>
+      <div className=" pt-6 pb-16 sm:pb-24">
 
-          {/* Product info */}
-          <div className="mt-10 px-4 sm:px-0 sm:mt-16 lg:mt-0">
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{product.name}</h1>
-
-            <div className="mt-3">
-              <h2 className="sr-only">Product information</h2>
-              <p className="text-3xl text-gray-900">{product.price}</p>
-            </div>
-
-            {/* Reviews */}
-            <div className="mt-3">
-              <h3 className="sr-only">Reviews</h3>
-              <div className="flex items-center">
-                <div className="flex items-center">
-                  {[0, 1, 2, 3, 4].map((rating) => (
-                    <StarIcon
-                      key={rating}
-                      className={classNames(
-                        product.rating > rating ? 'text-indigo-500' : 'text-gray-300',
-                        'h-5 w-5 flex-shrink-0'
-                      )}
-                      aria-hidden="true"
-                    />
-                  ))}
+        <main className="mt-16 sm:mt-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="lg:grid lg:grid-cols-12 lg:gap-8">
+              <div className="px-4 sm:px-6 sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left lg:flex lg:items-center">
+                <div>
+                  
+                  <h1 className="mt-4 text-4xl tracking-tight font-extrabold text-white sm:mt-5 sm:leading-none lg:mt-6 lg:text-5xl xl:text-6xl">
+                    <span className="md:block">Collect sales taxes</span>{' '}
+                    <span className="text-indigo-400 md:block">pay them on schedule and earn in between</span>
+                  </h1>
+                  <p className="mt-3 text-base text-gray-300 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
+                    TaxMe is a simple tool that helps you collect and pay your sales taxes using smart contracts and chainlink
+                  </p>
+                  
                 </div>
-                <p className="sr-only">{product.rating} out of 5 stars</p>
               </div>
-            </div>
+              <div className="mt-16 sm:mt-24 lg:mt-0 lg:col-span-6">
+                <div className="bg-white sm:max-w-md sm:w-full sm:mx-auto sm:rounded-lg sm:overflow-hidden">
+                  <div className="px-4 py-8 sm:px-10">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Sign in with</p>
 
-            <div className="mt-6">
-              <h3 className="sr-only">Description</h3>
+                      <div className="mt-1 grid grid-cols-3 gap-3">
+                        <div>
+                          <a
+                            href="#"
+                            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                          >
+                            <span className="sr-only">Sign in with Facebook</span>
+                            <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M20 10c0-5.523-4.477-10-10-10S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </a>
+                        </div>
 
-              <div
-                className="text-base text-gray-700 space-y-6"
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
-            </div>
+                        <div>
+                          <a
+                            href="#"
+                            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                          >
+                            <span className="sr-only">Sign in with Twitter</span>
+                            <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
+                            </svg>
+                          </a>
+                        </div>
 
-            <form className="mt-6">
-              {/* Colors */}
-              <div>
-                <h3 className="text-sm text-gray-600">Color</h3>
+                        <div>
+                          <a
+                            href="#"
+                            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                          >
+                            <span className="sr-only">Sign in with GitHub</span>
+                            <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
 
-                <RadioGroup value={selectedColor} onChange={setSelectedColor} className="mt-2">
-                  <RadioGroup.Label className="sr-only">Choose a color</RadioGroup.Label>
-                  <div className="flex items-center space-x-3">
-                    {product.colors.map((color) => (
-                      <RadioGroup.Option
-                        key={color.name}
-                        value={color}
-                        className={({ active, checked }) =>
-                          classNames(
-                            color.selectedColor,
-                            active && checked ? 'ring ring-offset-1' : '',
-                            !active && checked ? 'ring-2' : '',
-                            '-m-0.5 relative p-0.5 rounded-full flex items-center justify-center cursor-pointer focus:outline-none'
-                          )
-                        }
-                      >
-                        <RadioGroup.Label as="p" className="sr-only">
-                          {color.name}
-                        </RadioGroup.Label>
-                        <span
-                          aria-hidden="true"
-                          className={classNames(
-                            color.bgColor,
-                            'h-8 w-8 border border-black border-opacity-10 rounded-full'
-                          )}
-                        />
-                      </RadioGroup.Option>
-                    ))}
+                    <div className="mt-6 relative">
+                      <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                        <div className="w-full border-t border-gray-300" />
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">Or</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <form action="#" method="POST" className="space-y-6">
+                        <div>
+                          <label htmlFor="name" className="sr-only">
+                            Full name
+                          </label>
+                          <input
+                            type="text"
+                            name="name"
+                            id="name"
+                            autoComplete="name"
+                            placeholder="Full name"
+                            required
+                            className="block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
+                          />
+                        </div>
+
+                        <div>
+                          <label htmlFor="mobile-or-email" className="sr-only">
+                            Mobile number or email
+                          </label>
+                          <input
+                            type="text"
+                            name="mobile-or-email"
+                            id="mobile-or-email"
+                            autoComplete="email"
+                            placeholder="Mobile number or email"
+                            required
+                            className="block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
+                          />
+                        </div>
+
+                        <div>
+                          <label htmlFor="password" className="sr-only">
+                            Password
+                          </label>
+                          <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            placeholder="Password"
+                            autoComplete="current-password"
+                            required
+                            className="block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
+                          />
+                        </div>
+
+                        <div>
+                          <button
+                            type="submit"
+                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          >
+                            Create your account
+                          </button>
+                        </div>
+                      </form>
+                    </div>
                   </div>
-                </RadioGroup>
+                  <div className="px-4 py-6 bg-gray-50 border-t-2 border-gray-200 sm:px-10">
+                    <p className="text-xs leading-5 text-gray-500">
+                      By signing up, you agree to our{' '}
+                      <a href="#" className="font-medium text-gray-900 hover:underline">
+                        Terms
+                      </a>
+                      ,{' '}
+                      <a href="#" className="font-medium text-gray-900 hover:underline">
+                        Data Policy
+                      </a>{' '}
+                      and{' '}
+                      <a href="#" className="font-medium text-gray-900 hover:underline">
+                        Cookies Policy
+                      </a>
+                      .
+                    </p>
+                  </div>
+                </div>
               </div>
-
-              <div className="mt-10 flex sm:flex-col1">
-                <button
-                  type="submit"
-                  className="max-w-xs flex-1 bg-indigo-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-indigo-500 sm:w-full"
-                >
-                  Add to bag
-                </button>
-
-                <button
-                  type="button"
-                  className="ml-4 py-3 px-3 rounded-md flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-500"
-                >
-                  <HeartIcon className="h-6 w-6 flex-shrink-0" aria-hidden="true" />
-                  <span className="sr-only">Add to favorites</span>
-                </button>
-              </div>
-            </form>
-
-            <section aria-labelledby="details-heading" className="mt-12">
-              <h2 id="details-heading" className="sr-only">
-                Additional details
-              </h2>
-
-              <div className="border-t divide-y divide-gray-200">
-                {product.details.map((detail) => (
-                  <Disclosure as="div" key={detail.name}>
-                    {({ open }) => (
-                      <>
-                        <h3>
-                          <Disclosure.Button className="group relative w-full py-6 flex justify-between items-center text-left">
-                            <span
-                              className={classNames(open ? 'text-indigo-600' : 'text-gray-900', 'text-sm font-medium')}
-                            >
-                              {detail.name}
-                            </span>
-                            <span className="ml-6 flex items-center">
-                              {open ? (
-                                <MinusSmIcon
-                                  className="block h-6 w-6 text-indigo-400 group-hover:text-indigo-500"
-                                  aria-hidden="true"
-                                />
-                              ) : (
-                                <PlusSmIcon
-                                  className="block h-6 w-6 text-gray-400 group-hover:text-gray-500"
-                                  aria-hidden="true"
-                                />
-                              )}
-                            </span>
-                          </Disclosure.Button>
-                        </h3>
-                        <Disclosure.Panel as="div" className="pb-6 prose prose-sm">
-                          <ul role="list">
-                            {detail.items.map((item) => (
-                              <li key={item}>{item}</li>
-                            ))}
-                          </ul>
-                        </Disclosure.Panel>
-                      </>
-                    )}
-                  </Disclosure>
-                ))}
-              </div>
-            </section>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   </Layout>
