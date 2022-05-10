@@ -11,13 +11,18 @@ import Image from 'next/image'
 import TMSymbol from '../images/taxme-symbol.svg'
 import TMLogo from '../images/taxme-logo.svg'
 
-const Navbar = () => {
+const Navbar = ({showLoginInNavbar = true}) => {
   const { isAuthenticated, authenticate, user, account, logout } = useMoralis()
+  const [navbarItems, setNavbarItems] = React.useState(navigation.main.filter(item => !item.hideTopView || item.auth));
+
   const router = useRouter()
   
   useEffect(() => {
     if (isAuthenticated) {
       console.log('isAuthenticated', user, account)
+      setNavbarItems(navigation.main.filter(item => !item.hideTopView ));
+    } else {
+      setNavbarItems(navigation.main.filter(item => !item.hideTopView && !item.auth))
     }
   }, [isAuthenticated])
 
@@ -38,6 +43,8 @@ const Navbar = () => {
     await logout()
     console.log('logged out')
   }
+
+ 
   return (
     <Disclosure as="nav" className="bg-gray-800">
       {({ open }) => (
@@ -57,22 +64,26 @@ const Navbar = () => {
               </div>
               <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex-shrink-0 flex items-center">
-                  <Image 
-                    className="block lg:hidden h-8 w-auto"
-                    src={TMSymbol}
-                    height={40}
-                    alt="TaxMe logo"
-                  />
-                  <Image 
-                    className="hidden lg:block h-8 w-auto"
-                    src={TMLogo}
-                    height={40}
-                    alt="TaxMe logo"
-                  />
+                  <Link href="/">
+                    <a>
+                    <Image 
+                      className="block lg:hidden h-8 w-auto"
+                      src={TMSymbol}
+                      height={40}
+                      alt="TaxMe logo"
+                    />
+                    <Image 
+                      className="hidden lg:block h-8 w-auto"
+                      src={TMLogo}
+                      height={40}
+                      alt="TaxMe logo"
+                    />
+                    </a>
+                  </Link>
                 </div>
                 <div className="hidden sm:block sm:ml-6">
                   <div className="flex space-x-4">
-                    {navigation.main.map((item) => (
+                    {navbarItems.map((item) => (
                       <Link href={item.href} key={item.name}>
                         <a
                           className={classNames(
@@ -81,7 +92,7 @@ const Navbar = () => {
                               : 'text-gray-300 hover:bg-gray-700 hover:text-white',
                             'px-3 py-2 rounded-md text-sm font-medium',
                           )}
-                          aria-current={item.current ? 'page' : undefined}
+                          aria-current={router.pathname === item.href ? 'page' : undefined}
                         >
                           {item.name}
                         </a>
@@ -91,9 +102,7 @@ const Navbar = () => {
                 </div>
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                
-
-                {!user ? <button
+                {!user && showLoginInNavbar ? <button
                   type="button"
                   onClick={login}
                   className="ml-3 relative flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white px-4 py-1 rounded-xl bg-blue-500 text-white"
@@ -159,18 +168,18 @@ const Navbar = () => {
 
           <Disclosure.Panel className="sm:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {navigation.main.map((item) => (
+              {navbarItems.map((item) => (
                 <Disclosure.Button
                   key={item.name}
                   as="a"
                   href={item.href}
                   className={classNames(
-                    item.current
+                    router.pathname === item.href
                       ? 'bg-gray-900 text-white'
                       : 'text-gray-300 hover:bg-gray-700 hover:text-white',
                     'block px-3 py-2 rounded-md text-base font-medium',
                   )}
-                  aria-current={item.current ? 'page' : undefined}
+                  aria-current={router.pathname === item.href ? 'page' : undefined}
                 >
                   {item.name}
                 </Disclosure.Button>

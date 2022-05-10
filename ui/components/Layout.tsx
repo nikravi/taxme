@@ -5,7 +5,8 @@ import { navigation } from '../utils/project'
 
 type Props = {
   children?: ReactNode
-  title?: string
+  title?: string,
+  showLoginInNavbar?: boolean
 }
 const social = [
   {
@@ -71,7 +72,7 @@ const social = [
   },
 ]
 
-const Layout = ({ children, title = 'This is the default title' }: Props) => (
+const Layout = ({ children, title = 'TaxMe', showLoginInNavbar = true }: Props) => (
   <div>
     <Head>
       <title>{title}</title>
@@ -80,7 +81,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => (
       <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     </Head>
     <header>
-      <Navbar />
+      <Navbar showLoginInNavbar={showLoginInNavbar}/>
     </header>
 
     {children}

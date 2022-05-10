@@ -2,7 +2,10 @@ import React, { ReactNode } from 'react'
 
 export const navigation = {
     main: [
-        { name: 'Store', href: '/', current: true },
-        { name: 'admin', href: '/admin', current: false },
+        { name: 'Home', href: '/', hideTopView: true },
+        { name: 'Dashboard', href: '/dashboard', auth: true },
+        { name: 'Disclaimer', href: '/disclaimer', hideTopView: true },
+        { name: 'About', href: '/about', hideTopView: true },
+        
     ],
 }
