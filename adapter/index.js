@@ -48,7 +48,24 @@ const createRequest = (input, callback) => {
       // result key. This allows different adapters to be compatible with
       // one another.
 
-      callback(response.status, Requester.success(jobRunID, response));
+      const { GstRateProvinceList } = response.data;
+
+      const provinceMapping = GstRateProvinceList.map((province) => {
+        let gstArray = [];
+        province.GstRateDatePairList.map((gst) => {
+          if (gst.ExpiryDate === undefined) {
+            gstArray.push(gst.GstRate);
+          }
+        });
+
+        if (gstArray.length > 1) throw new Error("Multiple Gst Rates Found");
+        return { province: province.ProvinceCode, gst: gstArray[0] * 100 };
+      });
+
+      callback(
+        response.status,
+        Requester.success(jobRunID, { data: provinceMapping })
+      );
     })
     .catch((error) => {
       callback(500, Requester.errored(jobRunID, error));
