@@ -1,59 +1,77 @@
-import * as React from 'react'
-import { Fragment, useEffect } from 'react'
-import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { MenuIcon, XIcon } from '@heroicons/react/outline'
-import Link from 'next/link'
-import { classNames } from '../utils/utils'
-import { navigation } from '../utils/project'
-import { useMoralis } from 'react-moralis'
-import { useRouter } from 'next/router'
-import Image from 'next/image'
-import TMSymbol from '../images/taxme-symbol.svg'
-import TMLogo from '../images/taxme-logo.svg'
+import * as React from "react";
+import { Fragment, useEffect } from "react";
+import { Disclosure, Menu, Transition } from "@headlessui/react";
+import { MenuIcon, XIcon } from "@heroicons/react/outline";
+import Link from "next/link";
+import { classNames } from "../utils/utils";
+import { navigation } from "../utils/project";
+import { useMoralis } from "react-moralis";
+import { useRouter } from "next/router";
+import Image from "next/image";
+import TMSymbol from "../images/taxme-symbol.svg";
+import TMLogo from "../images/taxme-logo.svg";
 
-const Navbar = ({showLoginInNavbar = true}) => {
-  const { isAuthenticated, authenticate, user, account, logout } = useMoralis()
-  const [navbarItems, setNavbarItems] = React.useState(navigation.main.filter(item => !item.hideTopView || item.auth));
+const Navbar = ({ showLoginInNavbar = true }) => {
+  const {
+    isAuthenticated,
+    authenticate,
+    user,
+    account,
+    logout,
+    enableWeb3,
+    isWeb3Enabled,
+  } = useMoralis();
+  const [navbarItems, setNavbarItems] = React.useState(
+    navigation.main.filter((item) => !item.hideTopView || item.auth)
+  );
 
-  const router = useRouter()
-  
+  const router = useRouter();
+
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('isAuthenticated', user, account)
-      setNavbarItems(navigation.main.filter(item => !item.hideTopView ));
+      console.log("isAuthenticated", user, account);
+      setNavbarItems(navigation.main.filter((item) => !item.hideTopView));
     } else {
-      setNavbarItems(navigation.main.filter(item => !item.hideTopView && !item.auth))
+      setNavbarItems(
+        navigation.main.filter((item) => !item.hideTopView && !item.auth)
+      );
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isWeb3Enabled) return;
+    if (typeof window !== "undefined") {
+      enableWeb3();
+    }
+  }, [isWeb3Enabled]);
 
   const login = async () => {
     if (!isAuthenticated) {
-      await authenticate({ signingMessage: 'Log in' })
+      await authenticate({ signingMessage: "Log in" })
         .then(function (user) {
-          console.log('logged in user:', user)
-          console.log(user!.get('ethAddress'))
+          console.log("logged in user:", user);
         })
         .catch(function (error) {
-          console.log(error)
-        })
+          console.log(error);
+        });
     }
-  }
+  };
 
   const logOut = async () => {
-    await logout()
-    console.log('logged out')
-  }
+    await logout();
+    console.log("logged out");
+    router.push("/");
+  };
 
- 
   return (
     <Disclosure as="nav" className="bg-gray-800">
       {({ open }) => (
         <>
-          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-            <div className="relative flex items-center justify-between h-16">
+          <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+            <div className="relative flex h-16 items-center justify-between">
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
                 {/* Mobile menu button*/}
-                <Disclosure.Button className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                   <span className="sr-only">Open main menu</span>
                   {open ? (
                     <XIcon className="block h-6 w-6" aria-hidden="true" />
@@ -62,37 +80,39 @@ const Navbar = ({showLoginInNavbar = true}) => {
                   )}
                 </Disclosure.Button>
               </div>
-              <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
-                <div className="flex-shrink-0 flex items-center">
+              <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                <div className="flex flex-shrink-0 items-center">
                   <Link href="/">
                     <a>
-                    <Image 
-                      className="block lg:hidden h-8 w-auto"
-                      src={TMSymbol}
-                      height={40}
-                      alt="TaxMe logo"
-                    />
-                    <Image 
-                      className="hidden lg:block h-8 w-auto"
-                      src={TMLogo}
-                      height={40}
-                      alt="TaxMe logo"
-                    />
+                      <Image
+                        className="block h-8 w-auto lg:hidden"
+                        src={TMSymbol}
+                        height={40}
+                        alt="TaxMe logo"
+                      />
+                      <Image
+                        className="hidden h-8 w-auto lg:block"
+                        src={TMLogo}
+                        height={40}
+                        alt="TaxMe logo"
+                      />
                     </a>
                   </Link>
                 </div>
-                <div className="hidden sm:block sm:ml-6">
+                <div className="hidden sm:ml-6 sm:block">
                   <div className="flex space-x-4">
                     {navbarItems.map((item) => (
                       <Link href={item.href} key={item.name}>
                         <a
                           className={classNames(
                             router.pathname === item.href
-                              ? 'bg-gray-900 text-white'
-                              : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                            'px-3 py-2 rounded-md text-sm font-medium',
+                              ? "bg-gray-900 text-white"
+                              : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                            "rounded-md px-3 py-2 text-sm font-medium"
                           )}
-                          aria-current={router.pathname === item.href ? 'page' : undefined}
+                          aria-current={
+                            router.pathname === item.href ? "page" : undefined
+                          }
                         >
                           {item.name}
                         </a>
@@ -102,19 +122,24 @@ const Navbar = ({showLoginInNavbar = true}) => {
                 </div>
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                {!user && showLoginInNavbar ? <button
-                  type="button"
-                  onClick={login}
-                  className="ml-3 relative flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white px-4 py-1 rounded-xl bg-blue-500 text-white"
-                >
-                  Login with Metamask
-                </button> : null}
+                {!user && showLoginInNavbar ? (
+                  <button
+                    type="button"
+                    onClick={login}
+                    className="relative ml-3 flex rounded-xl bg-blue-500 px-4 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                  >
+                    Login with Metamask
+                  </button>
+                ) : null}
                 {/* Profile dropdown */}
-                {!!user ? (
-                  <Menu as="div" className="ml-3 relative">
+                {!!user?.get("ethAddress") ? (
+                  <Menu as="div" className="relative ml-3">
                     <div>
-                      <Menu.Button className="flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white px-7 py-4 rounded-xl text-white">
-                        {user.get('ethAddress')} 
+                      <Menu.Button className="flex rounded-xl px-7 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                        {user.get("ethAddress").slice(0, 6)}...
+                        {user
+                          .get("ethAddress")
+                          .slice(user.get("ethAddress").length - 4)}
                       </Menu.Button>
                     </div>
                     <Transition
@@ -126,32 +151,33 @@ const Navbar = ({showLoginInNavbar = true}) => {
                       leaveFrom="transform opacity-100 scale-100"
                       leaveTo="transform opacity-0 scale-95"
                     >
-                      <Menu.Items className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <Menu.Item>
                           {({ active }) => (
-                           
                             <a
-                                href={`https://etherscan.io/address/${user.get('ethAddress')}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={classNames(
-                                    active ? 'bg-gray-100' : '',
-                                    'block px-4 py-2 text-sm text-gray-700'
-                                )}
+                              href={`https://etherscan.io/address/${user.get(
+                                "ethAddress"
+                              )}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={classNames(
+                                active ? "bg-gray-100" : "",
+                                "block px-4 py-2 text-sm text-gray-700"
+                              )}
                             >
-                                View on Etherscan
+                              View on Etherscan
                             </a>
                           )}
                         </Menu.Item>
-                        
+
                         <Menu.Item>
                           {({ active }) => (
                             <a
                               href="#"
                               onClick={logOut}
                               className={classNames(
-                                active ? 'bg-gray-100' : '',
-                                'block px-4 py-2 text-sm text-gray-700',
+                                active ? "bg-gray-100" : "",
+                                "block px-4 py-2 text-sm text-gray-700"
                               )}
                             >
                               Sign out
@@ -167,7 +193,7 @@ const Navbar = ({showLoginInNavbar = true}) => {
           </div>
 
           <Disclosure.Panel className="sm:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1">
+            <div className="space-y-1 px-2 pt-2 pb-3">
               {navbarItems.map((item) => (
                 <Disclosure.Button
                   key={item.name}
@@ -175,11 +201,13 @@ const Navbar = ({showLoginInNavbar = true}) => {
                   href={item.href}
                   className={classNames(
                     router.pathname === item.href
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                    'block px-3 py-2 rounded-md text-base font-medium',
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                    "block rounded-md px-3 py-2 text-base font-medium"
                   )}
-                  aria-current={router.pathname === item.href ? 'page' : undefined}
+                  aria-current={
+                    router.pathname === item.href ? "page" : undefined
+                  }
                 >
                   {item.name}
                 </Disclosure.Button>
@@ -189,7 +217,7 @@ const Navbar = ({showLoginInNavbar = true}) => {
         </>
       )}
     </Disclosure>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

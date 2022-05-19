@@ -1,22 +1,62 @@
 import * as React from 'react'
-import { useMoralis } from 'react-moralis'
+import { useRouter } from "next/router";
+import { useMoralis, useWeb3Contract } from 'react-moralis'
 import { Fragment, useEffect } from 'react'
+import Link from 'next/link'
+import { TaxMeContractAddress } from '../constants/addresses'
+import abi from '../constants/abi.json'
 
 const QuickSignUp = ({ showLoginInNavbar = true }) => {
-  const { isAuthenticated, authenticate, user, account, logout } = useMoralis()
+  const {
+    isAuthenticated,
+    authenticate,
+    user,
+    account,
+    logout,
+    enableWeb3,
+    isWeb3Enabled,
+  } = useMoralis();
+
+  const [isRegistered, setIsRegistered] = React.useState(false);
+
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log('isAuthenticated', user, account)
-    } else {
+    if (isWeb3Enabled) {
+      checkIfUserIsRegistered();
     }
-  }, [isAuthenticated])
+  }, [isWeb3Enabled]);
+
+  const { runContractFunction: companiesAddresses } = useWeb3Contract({
+    abi: abi,
+    contractAddress: TaxMeContractAddress!,
+    functionName: "companiesAddresses",
+    // abi for the function params, it has empty name
+    params: { "": user?.get("ethAddress") },
+  });
+
+  const checkIfUserIsRegistered = async () => {
+    await companiesAddresses({
+      onSuccess: (address: any) => {
+        if (address.country) {
+          setIsRegistered(true);
+        }
+      },
+      onError: (error) => {
+        console.error("error", error);
+      },
+    });
+  };
+
+  const router = useRouter();
+
 
   const login = async () => {
     if (!isAuthenticated) {
       await authenticate({ signingMessage: 'Log in' })
         .then(function (user) {
-          console.log('logged in user:', user)
-          console.log(user!.get('ethAddress'))
+          console.log(user!.get("ethAddress"), isRegistered);
+          if (isRegistered) {
+            router.push('/dashboard');
+          }
         })
         .catch(function (error) {
           console.log(error)
@@ -24,8 +64,51 @@ const QuickSignUp = ({ showLoginInNavbar = true }) => {
     }
   }
 
+  // company registration form
+  const [companyRegistrationForm, setCompanyRegistrationForm] = React.useState({
+    country: 'Canada',
+    province: '',
+    city: '',
+    postalCode: '',
+  })
+
+  const {
+    runContractFunction: registerCompany,
+    isLoading,
+    isFetching,
+  } = useWeb3Contract({
+    abi: abi,
+    contractAddress: TaxMeContractAddress!, 
+    functionName: "registerCompany",
+    params: {
+      _city: companyRegistrationForm.city,
+      _state: companyRegistrationForm.province,
+      _postalCode: companyRegistrationForm.postalCode,
+      _subAdministrativeArea: companyRegistrationForm.province,
+      _country: companyRegistrationForm.country,
+      _isoCountryCode: companyRegistrationForm.country,
+    },
+
+  });
+  
+  const signUp = async (ev) => {
+    ev.preventDefault();
+
+    await registerCompany({
+      onError: (error) => {
+        console.error(error)
+      },
+      onSuccess: (results: any) => {
+        console.log('onSuccess', results);
+      },
+      onComplete: () => {
+        console.log('onComplete');
+      }
+    });
+  }
+
   return (
-    <div className="bg-white sm:max-w-md sm:w-full sm:mx-auto sm:rounded-lg sm:overflow-hidden">
+    <div className="bg-white sm:mx-auto sm:w-full sm:max-w-md sm:overflow-hidden sm:rounded-lg">
       <div className="px-4 py-8 sm:px-10">
         <div>
           <div className="mt-1">
@@ -33,7 +116,7 @@ const QuickSignUp = ({ showLoginInNavbar = true }) => {
               <button
                 type="button"
                 onClick={login}
-                className="relative flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white px-4 py-1 rounded-xl bg-blue-500 text-white"
+                className="relative flex rounded-xl bg-blue-500 px-4 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
               >
                 Login with Metamask
               </button>
@@ -45,13 +128,13 @@ const QuickSignUp = ({ showLoginInNavbar = true }) => {
                 <div>
                   <a
                     href={`https://etherscan.io/address/${user.get(
-                      'ethAddress',
+                      "ethAddress"
                     )}`}
                     target="_blank"
-                    className='text-gray-900 hover:underline'
+                    className="text-gray-900 hover:underline"
                     rel="noreferrer"
                   >
-                    {user.get('ethAddress')}
+                    {user.get("ethAddress")}
                   </a>
                 </div>
               </>
@@ -62,6 +145,30 @@ const QuickSignUp = ({ showLoginInNavbar = true }) => {
         {!!user ? (
           <div className="mt-6">
             <form action="#" method="POST" className="space-y-6">
+              <div>
+                <label
+                  htmlFor="country"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Country
+                </label>
+                <select
+                  id="country"
+                  name="country"
+                  required
+                  className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  value={companyRegistrationForm.country}
+                  onChange={(e) => {
+                    setCompanyRegistrationForm({
+                      ...companyRegistrationForm,
+                      country: e.target.value,
+                    });
+                  }}
+                >
+                  <option>United States</option>
+                  <option>Canada</option>
+                </select>
+              </div>
               <div>
                 <label
                   htmlFor="name"
@@ -76,25 +183,39 @@ const QuickSignUp = ({ showLoginInNavbar = true }) => {
                   autoComplete="city"
                   placeholder="City"
                   required
-                  className="block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
+                  value={companyRegistrationForm.city}
+                  onChange={(e) => {
+                    setCompanyRegistrationForm({
+                      ...companyRegistrationForm,
+                      city: e.target.value,
+                    });
+                  }}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
 
               <div>
                 <label
-                  htmlFor="mobile-or-email"
+                  htmlFor="company_state"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  State
+                  Province
                 </label>
                 <input
                   type="text"
-                  name="mobile-or-email"
-                  id="mobile-or-email"
-                  autoComplete="state"
-                  placeholder="State"
+                  name="company_state"
+                  id="company_state"
+                  autoComplete="province"
+                  placeholder="Province"
+                  value={companyRegistrationForm.province}
+                  onChange={(e) => {
+                    setCompanyRegistrationForm({
+                      ...companyRegistrationForm,
+                      province: e.target.value,
+                    });
+                  }}
                   required
-                  className="block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
 
@@ -103,25 +224,34 @@ const QuickSignUp = ({ showLoginInNavbar = true }) => {
                   htmlFor="zip-or-postal-code"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Zip code
+                  Postal code
                 </label>
                 <input
                   id="zip-or-postal-code"
                   name="zip-or-postal-code"
                   type="text"
-                  placeholder="Zip code"
-                  autoComplete="zip-code"
+                  placeholder="Postal code"
+                  autoComplete="postal-code"
                   required
-                  className="block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
+                  value={companyRegistrationForm.postalCode}
+                  onChange={(e) => {
+                    setCompanyRegistrationForm({
+                      ...companyRegistrationForm,
+                      postalCode: e.target.value,
+                    });
+                  }}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
 
               <div>
                 <button
                   type="submit"
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  onClick={signUp}
+                  disabled={isFetching || isLoading}
+                  className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-75"
                 >
-                  Create your account
+                  Sign up
                 </button>
               </div>
             </form>
@@ -129,18 +259,20 @@ const QuickSignUp = ({ showLoginInNavbar = true }) => {
         ) : null}
       </div>
       {!!user ? (
-        <div className="px-4 py-6 bg-gray-50 border-t-2 border-gray-200 sm:px-10">
+        <div className="border-t-2 border-gray-200 bg-gray-50 px-4 py-6 sm:px-10">
           <p className="text-xs leading-5 text-gray-500">
             Check our
-            <a href="#" className="font-medium text-gray-900 hover:underline pl-1">
-              Disclaimer
-            </a>
+            <Link href="/disclaimer">
+              <a className="pl-1 font-medium text-gray-900 hover:underline">
+                Disclaimer
+              </a>
+            </Link>
             .
           </p>
         </div>
       ) : null}
     </div>
-  )
+  );
 }
 
 export default QuickSignUp
