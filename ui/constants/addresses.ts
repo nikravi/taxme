@@ -1,0 +1,1 @@
+export const TaxMeContractAddress = '0x1a3DA1FBc577C8CfE3FF06eC66321c4Db56d0309'
