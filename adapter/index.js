@@ -16,55 +16,46 @@ const customParams = {
   endpoint: false,
 };
 
+const NORMALIZE_COEF = 100000;
+
 const createRequest = (input, callback) => {
   // The Validator helps you validate the Chainlink request data
   const validator = new Validator(callback, input, customParams);
   const jobRunID = validator.validated.id;
-  const API_KEY = process.env.API_KEY;
-  const url = `https://gstrate-cra-arc.api.canada.ca:443/ebci/ghnf/api/ext/v1/rates`;
+  const url = `http://api.salestaxapi.ca/v2/province/all`;
 
-  const params = {};
-
-  headers = {
-    "user-key": API_KEY,
-  };
-
-  // This is where you would add method and headers
-  // you can add method like GET or POST and add it to the config
-  // The default is GET requests
-  // method = 'get'
-  // headers = 'headers.....'
   const config = {
     url,
-    params,
-    headers,
+    params: {},
+    headers: {},
   };
 
   // The Requester allows API calls be retry in case of timeout
   // or connection failure
   Requester.request(config, customError)
     .then((response) => {
-      // It's common practice to store the desired value at the top-level
-      // result key. This allows different adapters to be compatible with
-      // one another.
+      const canadaTaxes = [];
+      const { data: provinces } = response;
+      let agreedGst = 0;
 
-      const { GstRateProvinceList } = response.data;
+      for (let province in provinces) {
+        const { gst, pst } = provinces[province];
+        const normalizedPST = Math.floor(pst * NORMALIZE_COEF);
+        const normalizedGST = Math.floor(gst * NORMALIZE_COEF);
 
-      const provinceMapping = GstRateProvinceList.map((province) => {
-        let gstArray = [];
-        province.GstRateDatePairList.map((gst) => {
-          if (gst.ExpiryDate === undefined) {
-            gstArray.push(gst.GstRate);
-          }
-        });
-
-        if (gstArray.length > 1) throw new Error("Multiple Gst Rates Found");
-        return { province: province.ProvinceCode, gst: gstArray[0] * 100 };
-      });
+        if (!agreedGst) agreedGst = normalizedGST;
+        else if (agreedGst !== normalizedGST) {
+          throw new Error("Multiple Gst Rates Found");
+        }
+        canadaTaxes.push(province.toUpperCase().concat(`.${normalizedPST}`));
+      }
+      canadaTaxes.push("GST".concat(`.${agreedGst}`));
 
       callback(
         response.status,
-        Requester.success(jobRunID, { data: provinceMapping })
+        Requester.success(jobRunID, {
+          data: { serializedGst: canadaTaxes.toString() },
+        })
       );
     })
     .catch((error) => {
