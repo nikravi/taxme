@@ -59,12 +59,15 @@ const createRequest = (input, callback) => {
         });
 
         if (gstArray.length > 1) throw new Error("Multiple Gst Rates Found");
-        return { province: province.ProvinceCode, gst: gstArray[0] * 100 };
+
+        return province.ProvinceCode.concat(`.${gstArray[0] * 100}`);
       });
 
       callback(
         response.status,
-        Requester.success(jobRunID, { data: provinceMapping })
+        Requester.success(jobRunID, {
+          data: { serializedGst: provinceMapping.toString() },
+        })
       );
     })
     .catch((error) => {
