@@ -3,7 +3,7 @@ import { Fragment, useEffect } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { MenuIcon, XIcon } from "@heroicons/react/outline";
 import Link from "next/link";
-import { classNames } from "../utils/utils";
+import { classNames, ethAddressDisplay } from "../utils/utils";
 import { navigation } from "../utils/project";
 import { useMoralis } from "react-moralis";
 import { useRouter } from "next/router";
@@ -136,10 +136,7 @@ const Navbar = ({ showLoginInNavbar = true }) => {
                   <Menu as="div" className="relative ml-3">
                     <div>
                       <Menu.Button className="flex rounded-xl px-7 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                        {user.get("ethAddress").slice(0, 6)}...
-                        {user
-                          .get("ethAddress")
-                          .slice(user.get("ethAddress").length - 4)}
+                        {ethAddressDisplay(user.get("ethAddress"))}
                       </Menu.Button>
                     </div>
                     <Transition

@@ -1,11 +1,16 @@
-import Web3Api from "moralis/types/generated/web3Api";
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { useMoralis, useMoralisCloudFunction, useMoralisQuery, useMoralisWeb3Api, useWeb3Contract } from "react-moralis";
+import {
+  useMoralis,
+  useMoralisCloudFunction,
+  useMoralisQuery,
+  useMoralisWeb3Api,
+  useWeb3Contract,
+} from "react-moralis";
 import abi from "../constants/abi.json";
 import { TaxMeContractAddress } from "../constants/addresses";
 import TaxCollector from "../interfaces/TaxCollector";
-import contentHash from "content-hash";
+import TaxCollectorRow from "./TaxCollectorRow";
 
 const TaxCollectors = () => {
   const {
@@ -59,19 +64,33 @@ const TaxCollectors = () => {
       //   all.map((e) => (e.id === entity.id ? entity : e)),
     }
   );
-  console.log(taxCollectors.map((taxCollector) => taxCollector.attributes)
-//   .map(c => {
-//     return {
-//       ...c,
-//       decoded: getProvider()
-//     }
-//   })
+  console.log(
+    taxCollectors.map((taxCollector) => taxCollector.attributes)
+    //   .map(c => {
+    //     return {
+    //       ...c,
+    //       decoded: getProvider()
+    //     }
+    //   })
   );
 
-// const { data } = useMoralisCloudFunction("decodeString", {
-//   transaction_hash:
-//     "0x30007a5a56641e5447576f68be2ada3182215a7ea1930d399bc6114c0220fa16",
-// });
+  // investigate failure to decode string
+  // at Logger.makeError (/moralis-server/node_modules/@ethersproject/logger/lib/index.js:199:21)
+  // at Logger.throwError (/moralis-server/node_modules/@ethersproject/logger/lib/index.js:208:20)
+  // at Logger.throwArgumentError (/moralis-server/node_modules/@ethersproject/logger/lib/index.js:211:21)
+  // at Object.hexZeroPad (/moralis-server/node_modules/@ethersproject/bytes/lib/index.js:274:16)
+  // at AddressCoder.decode (/moralis-server/node_modules/@ethersproject/abi/lib/coders/address.js:34:45)
+  // at /moralis-server/node_modules/@ethersproject/abi/lib/coders/array.js:106:31
+  // at Array.forEach (<anonymous>)
+  // at Object.unpack (/moralis-server/node_modules/@ethersproject/abi/lib/coders/array.js:85:12)
+  // at TupleCoder.decode (/moralis-server/node_modules/@ethersproject/abi/lib/coders/tuple.js:39:49)
+  // at AbiCoder.decode (/moralis-server/node_modules/@ethersproject/abi/lib/abi-coder.js:93:22)
+  // const { data } = useMoralisCloudFunction("decodeString", {
+  //   transaction_hash:
+  //     "0x30007a5a56641e5447576f68be2ada3182215a7ea1930d399bc6114c0220fa16",
+  // });
+
+  // console.log({data});
 
   const [newCollector, setNewCollector] = useState(false);
   const [newCollectorForm, setNewCollectorForm] = useState({
@@ -149,6 +168,12 @@ const TaxCollectors = () => {
                       scope="col"
                       className="py-3 pl-4 pr-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 sm:pl-6"
                     >
+                      Created on
+                    </th>
+                    <th
+                      scope="col"
+                      className="py-3 pl-4 pr-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 sm:pl-6"
+                    >
                       Region
                     </th>
                     <th
@@ -165,6 +190,7 @@ const TaxCollectors = () => {
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {newCollector ? (
                     <tr>
+                      <td></td>
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                         <input
                           type="text"
@@ -223,38 +249,7 @@ const TaxCollectors = () => {
                     </tr>
                   ) : null}
                   {taxCollectors.map((collector) => (
-                    <tr key={collector.get("transaction_hash")}>
-                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                        {collector.get("region")}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {collector.get("newTaxCollector")}
-                      </td>
-                      <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                        {isOwner ? (
-                          <>
-                            <a
-                              href="#"
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Edit
-                              <span className="sr-only">
-                                , {collector.get("region")}
-                              </span>
-                            </a>
-                            <a
-                              href="#"
-                              className="pl-4 text-red-900 hover:text-indigo-900"
-                            >
-                              Delete
-                              <span className="sr-only">
-                                , {collector.get("region")}
-                              </span>
-                            </a>
-                          </>
-                        ) : null}
-                      </td>
-                    </tr>
+                    <TaxCollectorRow collector={collector} isOwner={isOwner} />
                   ))}
                 </tbody>
               </table>
