@@ -71,7 +71,7 @@ const social = [
   },
 ]
 
-const Layout = ({ children, title = 'Splitify' }: Props) => (
+const Layout = ({ children, title = 'web3fy' }: Props) => (
   <div>
     <Head>
       <title>{title}</title>
