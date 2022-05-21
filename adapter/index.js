@@ -47,14 +47,14 @@ const createRequest = (input, callback) => {
         else if (agreedGst !== normalizedGST) {
           throw new Error("Multiple Gst Rates Found");
         }
-        canadaTaxes.push(province.toUpperCase().concat(`.${normalizedPST}`));
+        canadaTaxes.push([province, `${normalizedPST}`]);
       }
-      canadaTaxes.push("GST".concat(`.${agreedGst}`));
+      canadaTaxes.push(["GST", `.${agreedGst}`]);
 
       callback(
         response.status,
         Requester.success(jobRunID, {
-          data: { serializedGst: canadaTaxes.toString() },
+          data: { serializedData: canadaTaxes },
         })
       );
     })
