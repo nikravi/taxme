@@ -110,10 +110,10 @@ import { TaxMe } from "../../typechain/TaxMe"
             .sale(companyAccount.address, CUSDToken.address, "100", "1", "K2J 6E5", "CA");
 
             // net amount
-          expect((await CUSDToken.balanceOf(companyAccount.address)).toString()).to.eq("87");
+          expect((await CUSDToken.balanceOf(companyAccount.address)).toString()).to.eq("100");
           
           expect(await taxMe.companiesTaxes(companyAccount.address, taxCollector.address)).to.eq(
-            "8"
+            "9"
           )
           expect(await taxMe.companiesTaxes(companyAccount.address, otherTaxCollector.address)).to.eq(
             "5"
