@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { useMoralis, useWeb3Contract } from "react-moralis";
 import { TaxMeContractAddress } from "../constants/addresses";
-import abi from "../constants/abi.json";
+import abi from "../constants/abi-taxme.json";
 
 const EditAddress = () => {
   const {

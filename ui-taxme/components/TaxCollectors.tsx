@@ -7,7 +7,7 @@ import {
   useMoralisWeb3Api,
   useWeb3Contract,
 } from "react-moralis";
-import abi from "../constants/abi.json";
+import abi from "../constants/abi-taxme.json";
 import { TaxMeContractAddress } from "../constants/addresses";
 import TaxCollector from "../interfaces/TaxCollector";
 import TaxCollectorRow from "./TaxCollectorRow";
@@ -36,7 +36,7 @@ const TaxCollectors = () => {
           console.log({ ownerAddress });
 
           setIsOwner(
-            user?.get("ethAddress").toUpperCase() === ownerAddress.toUpperCase()
+            user?.get("ethAddress").toLowerCase() === ownerAddress.toLowerCase()
           );
         },
         onError: (error) => {
@@ -55,26 +55,21 @@ const TaxCollectors = () => {
     (q) => q.descending("createdAt"),
     [],
     {
+      // FIXME: live not working?
       live: true,
-      // onLiveEnter: (entity, all) => [...all, entity],
-      // onLiveCreate: (entity, all) => [...all, entity],
-      // onLiveDelete: (entity, all) => all.filter((e) => e.id !== entity.id),
-      // onLiveLeave: (entity, all) => all.filter((e) => e.id !== entity.id),
-      // onLiveUpdate: (entity, all) =>
-      //   all.map((e) => (e.id === entity.id ? entity : e)),
     }
   );
-  console.log(
-    taxCollectors.map((taxCollector) => taxCollector.attributes)
-    //   .map(c => {
-    //     return {
-    //       ...c,
-    //       decoded: getProvider()
-    //     }
-    //   })
-  );
+  // console.log(
+  //   taxCollectors.map((taxCollector) => taxCollector.attributes)
+  //   //   .map(c => {
+  //   //     return {
+  //   //       ...c,
+  //   //       decoded: getProvider()
+  //   //     }
+  //   //   })
+  // );
 
-  // investigate failure to decode string
+  // FIXME: investigate failure to decode string
   // at Logger.makeError (/moralis-server/node_modules/@ethersproject/logger/lib/index.js:199:21)
   // at Logger.throwError (/moralis-server/node_modules/@ethersproject/logger/lib/index.js:208:20)
   // at Logger.throwArgumentError (/moralis-server/node_modules/@ethersproject/logger/lib/index.js:211:21)

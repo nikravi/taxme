@@ -1,56 +1,78 @@
-import Link from 'next/link'
-import Layout from '../components/Layout'
+import Link from "next/link";
+import Layout from "../components/Layout";
 
-import { useState } from 'react'
-import { Disclosure, RadioGroup, Tab } from '@headlessui/react'
-import { StarIcon } from '@heroicons/react/solid'
-import { HeartIcon, MinusSmIcon, PlusSmIcon } from '@heroicons/react/outline'
-
-const product = {
-  name: 'Zip Tote Basket',
-  price: '$140',
-  rating: 4,
-  images: [
-    {
-      id: 1,
-      name: 'Angled view',
-      src: 'https://tailwindui.com/img/ecommerce-images/product-page-03-product-01.jpg',
-      alt: 'Angled front view with bag zipped and handles upright.',
-    },
-    // More images...
-  ],
-  colors: [
-    { name: 'Washed Black', bgColor: 'bg-gray-700', selectedColor: 'ring-gray-700' },
-    { name: 'White', bgColor: 'bg-white', selectedColor: 'ring-gray-400' },
-    { name: 'Washed Gray', bgColor: 'bg-gray-500', selectedColor: 'ring-gray-500' },
-  ],
-  description: `
-    <p>The Zip Tote Basket is the perfect midpoint between shopping tote and comfy backpack. With convertible straps, you can hand carry, should sling, or backpack this convenient and spacious bag. The zip top and durable canvas construction keeps your goods protected for all-day use.</p>
-  `,
-  details: [
-    {
-      name: 'Features',
-      items: [
-        'Multiple strap configurations',
-        'Spacious interior with top zip',
-        'Leather handle and tabs',
-        'Interior dividers',
-        'Stainless strap loops',
-        'Double stitched construction',
-        'Water-resistant',
-      ],
-    },
-    // More sections...
-  ],
-}
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ')
-}
+import { useEffect, useState } from "react";
+import { Disclosure, RadioGroup, Tab } from "@headlessui/react";
+import { StarIcon } from "@heroicons/react/solid";
+import { HeartIcon, MinusSmIcon, PlusSmIcon } from "@heroicons/react/outline";
+import { useMoralis, useMoralisQuery } from "react-moralis";
+import {product} from "../utils/products";
+import { cartAddToCart, classNames, formatCurrency } from "../utils/utils";
 
 const IndexPage = () => {
-  const [selectedColor, setSelectedColor] = useState(product.colors[0])
+  const {
+    isAuthenticated,
+    authenticate,
+    user,
+    account,
+    logout,
+    isWeb3Enabled,
+  } = useMoralis();
+  const { Moralis } = useMoralis();
 
+  const { fetch } = useMoralisQuery(
+    "Cart",
+    (query) => query.equalTo("userId", user?.id),
+    [user?.id],
+    { autoFetch: false }
+  );
+  const [cart, setCart] = useState(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetch({
+        onSuccess: (cartFetched) => {
+          console.log("cart fetched", cartFetched);
+          
+          setCart(cartFetched[0]);
+        },
+        onError: (error) => {
+          console.error("error fetching cart", error);
+        },
+      });
+    }
+  }, [isAuthenticated]);
+
+  
+  const addToCart = (ev) => {
+    ev.preventDefault();
+
+    if (!cart) {
+      const Cart = Moralis.Object.extend("Cart");
+      const createdCart = new Cart();
+      createdCart.set("userId", user?.id);
+      cartAddToCart(createdCart, product.productId, 1, true);
+      setCart(createdCart);
+      createdCart.save().then(
+        (c) => {
+          console.log("created new cart", c);
+        },
+        (error) => {
+          console.error(error);
+        }
+      );
+    } else {
+      cartAddToCart(cart, product.productId, 1, true);
+      cart.save().then(
+        (c) => {
+          console.log("added to cart", c);
+        },
+        (error) => {
+          console.error(error);
+        }
+      );
+    }
+  };
   return (
     <Layout title="Store | web3fy">
       <div className="bg-gray-100">
@@ -111,7 +133,9 @@ const IndexPage = () => {
 
               <div className="mt-3">
                 <h2 className="sr-only">Product information</h2>
-                <p className="text-3xl text-gray-900">{product.price}</p>
+                <p className="text-3xl text-gray-900">
+                  {formatCurrency(product.price)}
+                </p>
               </div>
 
               {/* Reviews */}
@@ -146,65 +170,14 @@ const IndexPage = () => {
               </div>
 
               <form className="mt-6">
-                {/* Colors */}
-                <div>
-                  <h3 className="text-sm text-gray-600">Color</h3>
-
-                  <RadioGroup
-                    value={selectedColor}
-                    onChange={setSelectedColor}
-                    className="mt-2"
-                  >
-                    <RadioGroup.Label className="sr-only">
-                      Choose a color
-                    </RadioGroup.Label>
-                    <div className="flex items-center space-x-3">
-                      {product.colors.map((color) => (
-                        <RadioGroup.Option
-                          key={color.name}
-                          value={color}
-                          className={({ active, checked }) =>
-                            classNames(
-                              color.selectedColor,
-                              active && checked ? "ring ring-offset-1" : "",
-                              !active && checked ? "ring-2" : "",
-                              "relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 focus:outline-none"
-                            )
-                          }
-                        >
-                          <RadioGroup.Label as="p" className="sr-only">
-                            {color.name}
-                          </RadioGroup.Label>
-                          <span
-                            aria-hidden="true"
-                            className={classNames(
-                              color.bgColor,
-                              "h-8 w-8 rounded-full border border-black border-opacity-10"
-                            )}
-                          />
-                        </RadioGroup.Option>
-                      ))}
-                    </div>
-                  </RadioGroup>
-                </div>
-
                 <div className="sm:flex-col1 mt-10 flex">
                   <button
                     type="submit"
-                    className="flex max-w-xs flex-1 items-center justify-center rounded-md border border-transparent bg-indigo-600 py-3 px-8 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 sm:w-full"
+                    onClick={addToCart}
+                    disabled={!isAuthenticated}
+                    className="flex max-w-xs flex-1 items-center justify-center rounded-md border border-transparent bg-indigo-600 py-3 px-8 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 disabled:opacity-75 sm:w-full"
                   >
                     Add to bag
-                  </button>
-
-                  <button
-                    type="button"
-                    className="ml-4 flex items-center justify-center rounded-md py-3 px-3 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
-                  >
-                    <HeartIcon
-                      className="h-6 w-6 flex-shrink-0"
-                      aria-hidden="true"
-                    />
-                    <span className="sr-only">Add to favorites</span>
                   </button>
                 </div>
               </form>
@@ -266,6 +239,6 @@ const IndexPage = () => {
       </div>
     </Layout>
   );
-}
+};
 
-export default IndexPage
+export default IndexPage;

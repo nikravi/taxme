@@ -4,7 +4,7 @@ import { useMoralis, useWeb3Contract } from 'react-moralis'
 import { Fragment, useEffect } from 'react'
 import Link from 'next/link'
 import { TaxMeContractAddress } from '../constants/addresses'
-import abi from '../constants/abi.json'
+import abi from "../constants/abi-taxme.json";
 
 const QuickSignUp = ({ showLoginInNavbar = true }) => {
   const {
