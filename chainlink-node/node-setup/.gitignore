@@ -1,0 +1,9 @@
+#chain-link
+apicredentials.txt
+password.txt
+secret
+/data
+log.jsonl
+database.env
+.env
+chainlink_debug.log
