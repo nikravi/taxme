@@ -49,7 +49,7 @@ const createRequest = (input, callback) => {
         }
         canadaTaxes.push([province, `${normalizedPST}`]);
       }
-      canadaTaxes.push(["gst", `.${agreedGst}`]);
+      canadaTaxes.push(["gst", `${agreedGst}`]);
 
       callback(
         response.status,
