@@ -1,20 +1,22 @@
 /* eslint-disable no-process-exit */
 // yarn hardhat run scripts/deploy-taxme.ts --network rinkeby
-import { ethers } from "hardhat"
+import { ethers, deployments, getNamedAccounts } from "hardhat"
 import { verify } from "../helper-functions"
 
 async function deployTaxMe(): Promise<void> {
   const TaxMe = await ethers.getContractFactory("TaxMe")
-  // todo: wait confirmations + verify
-  // const taxMe = await deploy("TaxMe", {
-  //       from: deployer,
-  //       args: [],
-  //       log: true,
-  //       waitConfirmations: 6,
-  //   })
-  const taxMe = await TaxMe.deploy()
+  const { deploy, log, get } = deployments
+  const { deployer } = await getNamedAccounts()
 
-  await taxMe.deployed()
+  const taxMe = await deploy("TaxMe", {
+        from: deployer,
+        args: [],
+        log: true,
+        waitConfirmations: 6,
+    })
+  // const taxMe = await TaxMe.deploy()
+
+  // await taxMe.deployed()
 
   console.log("TaxMe deployed to:", taxMe.address) 
 

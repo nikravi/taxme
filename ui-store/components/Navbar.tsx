@@ -1,21 +1,97 @@
 import * as React from 'react'
-import { Fragment, useEffect } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { BellIcon, MenuIcon, XIcon } from '@heroicons/react/outline'
+import { BellIcon, MenuIcon, XIcon, ShoppingCartIcon } from '@heroicons/react/outline'
 import Link from 'next/link'
 import { classNames, ethAddressDisplay } from '../utils/utils'
 import { navigation } from '../utils/project'
-import { useMoralis } from 'react-moralis'
+import { useMoralis, useMoralisQuery, useWeb3Contract } from 'react-moralis'
 import { useRouter } from 'next/router'
+import { TaxMeContractAddress } from '../constants/addresses'
+import abi from "../constants/abi-taxme.json";
 
 const Navbar = () => {
-  const { isAuthenticated, authenticate, user, account, logout } = useMoralis()
+  const {
+    isAuthenticated,
+    authenticate,
+    user,
+    account,
+    logout,
+    isWeb3Enabled,
+    enableWeb3,
+  } = useMoralis();
+
   const router = useRouter()
+
+  const { runContractFunction: getOwner } = useWeb3Contract({
+    abi: abi,
+    contractAddress: TaxMeContractAddress!,
+    functionName: "owner",
+  });
+  
+  useEffect(() => {
+    if (isWeb3Enabled) return;
+    if (typeof window !== "undefined") {
+      enableWeb3();
+    }
+  }, [isWeb3Enabled]);
+
+  const [isOwner, setIsOwner] = React.useState(false);
+
+  const { fetch } = useMoralisQuery(
+    "Cart",
+    (query) => query.equalTo("userId", user?.id),
+    [user?.id],
+    { autoFetch: false }
+  );
+  const [cart, setCart] = useState(null);
+
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('isAuthenticated', user, account)
+      fetch({
+        onSuccess: (cartFetched) => {
+          console.log("cart fetched", cartFetched);
+
+          setCart(cartFetched[0]);
+        },
+        onError: (error) => {
+          console.error("error fetching cart", error);
+        },
+      });
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isWeb3Enabled) {
+      getOwner({
+        onSuccess: (ownerAddress: string) => {
+          console.log({ ownerAddress });
+
+          setIsOwner(
+            user?.get("ethAddress").toLowerCase() === ownerAddress.toLowerCase()
+          );
+        },
+        onError: (error) => {
+          console.error("error fetching owner", error);
+        },
+      });
+    }
+  }, [isWeb3Enabled]);
+
+  const [navbarItems, setNavbarItems] = React.useState(
+    navigation.main.filter((item) => !item.hideTopView)
+  );
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log("isAuthenticated", user, account);
+      setNavbarItems(navigation.main.filter((item) => !item.hideTopView));
+    } else {
+      setNavbarItems(
+        navigation.main.filter((item) => !item.hideTopView && !item.owner)
+      );
+    }
+  }, [isAuthenticated]);
 
   const login = async () => {
     if (!isAuthenticated) {
@@ -31,8 +107,9 @@ const Navbar = () => {
   }
 
   const logOut = async () => {
-    await logout()
-    console.log('logged out')
+    await logout();
+    console.log("logged out");
+    router.push("/");
   }
   return (
     <Disclosure as="nav" className="bg-white shadow">
@@ -54,12 +131,14 @@ const Navbar = () => {
               <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex flex-shrink-0 items-center">
                   <Link href="/">
-                    web3fy
-                    </Link>
+                    <div className="cursor-pointer rounded-md bg-gray-200 p-2">
+                      web3fy
+                    </div>
+                  </Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:block">
                   <div className="flex space-x-4">
-                    {navigation.main.map((item) => (
+                    {navbarItems.map((item) => (
                       <Link href={item.href} key={item.name}>
                         <a
                           className={classNames(
@@ -68,7 +147,6 @@ const Navbar = () => {
                               : "inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700",
                             ""
                           )}
-                          aria-current={item.current ? "page" : undefined}
                         >
                           {item.name}
                         </a>
@@ -78,11 +156,31 @@ const Navbar = () => {
                 </div>
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                <Link href="/cart">
+                  <a
+                    href='#'
+                    className="relative mr-4 rounded-full bg-white p-1 pr-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  >
+                    <ShoppingCartIcon
+                      className="mr-4 h-6 w-6"
+                      aria-hidden="true"
+                    />
+                    {cart ? (
+                      <span className="absolute top-[5px] right-1 inline-flex items-center rounded-full bg-indigo-100 py-1 px-1 text-xs font-medium text-indigo-800">
+                        {cart
+                          .get("products")
+                          .map((p) => p.quantity)
+                          .reduce((qPrev, q) => parseInt(q, 10) + parseInt(qPrev, 10), 0)}
+                      </span>
+                    ) : null}
+                  </a>
+                </Link>
+
                 {!user ? (
                   <button
                     type="button"
                     onClick={login}
-                    className="relative ml-3 flex flex rounded-xl rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    className="relative ml-3 flex flex rounded-xl rounded-full bg-white p-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                   >
                     Login with Metamask
                   </button>

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7;
+pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -41,6 +41,13 @@ contract TaxMe is Ownable {
     string indexed region,
     address indexed previousTaxCollector,
     address indexed newTaxCollector
+  );
+
+  event Sale (
+    address indexed company,
+    uint256 amount,
+    uint256 regionalTaxAmount,
+    uint256 nationalTaxAmount
   );
 
   /**
@@ -97,13 +104,13 @@ contract TaxMe is Ownable {
         clientIsoCountryCode
       );
 
-    uint256 companyAmount = fullAmount - regionalAmount - nationalAmount;
     IERC20(token).safeTransferFrom(msg.sender, address(this), regionalAmount + nationalAmount);
     _registerCompanyTax(company, companyAddress, regionalAmount, nationalAmount);
 
     // transfer amount after taxes
-    IERC20(token).safeTransferFrom(msg.sender, company, companyAmount);
+    IERC20(token).safeTransferFrom(msg.sender, company, fullAmount);
 
+    emit Sale(company, fullAmount, regionalAmount, nationalAmount);
     // todo: store exchange rate of token for ACB accounting. Chainlink logs in Filecoin?
   }
 
@@ -155,8 +162,8 @@ contract TaxMe is Ownable {
       companyAddress
     );
 
-    regionalAmount = (fullAmount * rate) / 100;
-    nationalAmount = (fullAmount * nationalRate) / 100;
+    regionalAmount = (fullAmount * rate / 1000) / 100;
+    nationalAmount = (fullAmount * nationalRate/ 1000) / 100;
     return (regionalAmount, nationalAmount, companyAddress);
   }
 
@@ -167,7 +174,7 @@ contract TaxMe is Ownable {
   ) internal pure returns (uint256 localRate, uint256 nationalRate) {
     if (keccak256(abi.encodePacked(productCategoryId)) == keccak256(abi.encodePacked("1"))) {
       // todo: get tax rates from the oracle
-      return (8, 5);
+      return (9000, 5000);
     }
   }
 }

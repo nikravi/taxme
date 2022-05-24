@@ -21,11 +21,11 @@ const Navbar = ({ showLoginInNavbar = true }) => {
     enableWeb3,
     isWeb3Enabled,
   } = useMoralis();
+  const router = useRouter();
+
   const [navbarItems, setNavbarItems] = React.useState(
     navigation.main.filter((item) => !item.hideTopView || item.auth)
   );
-
-  const router = useRouter();
 
   useEffect(() => {
     if (isAuthenticated) {

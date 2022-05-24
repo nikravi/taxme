@@ -3,7 +3,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { useWeb3Contract } from "react-moralis";
 import TaxCollector from "../interfaces/TaxCollector";
-import abi from "../constants/abi.json";
+import abi from "../constants/abi-taxme.json";
 import { TaxMeContractAddress } from "../constants/addresses";
 import { ethAddressDisplay } from "../utils/utils";
 
