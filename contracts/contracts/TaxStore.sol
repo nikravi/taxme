@@ -2,30 +2,16 @@
 pragma solidity ^0.8.13;
 
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
+import "@chainlink/contracts/src/v0.8/KeeperCompatible.sol";
 
-/**
- * Request testnet LINK and ETH here: https://faucets.chain.link/
- * Find information on LINK Token Contracts and get the latest ETH and LINK faucets here: https://docs.chain.link/docs/link-token-contracts/
- */
-
-/**
- * @notice DO NOT USE THIS CODE IN PRODUCTION. This is an example contract.
- */
-contract TaxStore is ChainlinkClient {
+contract TaxStore is ChainlinkClient, KeeperCompatibleInterface {
   using Chainlink for Chainlink.Request;
 
   mapping(string => string) public taxes;
 
-  /**
-   * @notice Initialize the link token and target oracle
-   * @dev The oracle address must be an Operator contract for multiword response
-   *
-   *
-   * Kovan Testnet details:
-   * Link Token: 0xa36085F69e2889c224210F603D836748e7dC0088
-   * Oracle: 0xc57B33452b4F7BB189bB5AfaE9cc4aBa1f7a4FD8 (Chainlink DevRel)
-   *
-   */
+  uint256 public interval = 2592000; //30 days
+  uint256 public lastTimeStamp;
+
   constructor() {
     setChainlinkToken(0x01BE23585060835E02B77ef475b0Cc51aA1e0709);
     setChainlinkOracle(0x220143aF6cF907FE803D6d99756841ba1D1Cda8a);
@@ -61,6 +47,22 @@ contract TaxStore is ChainlinkClient {
     uint256 length = taxesData.length;
     for (uint256 i = 0; i < length; i++) {
       taxes[taxesData[i][0]] = taxesData[i][1];
+    }
+  }
+
+  function checkUpkeep(bytes calldata)
+    external
+    view
+    override
+    returns (bool upkeepNeeded, bytes memory)
+  {
+    upkeepNeeded = (block.timestamp - lastTimeStamp) > interval;
+  }
+
+  function performUpkeep(bytes calldata) external override {
+    if ((block.timestamp - lastTimeStamp) > interval) {
+      lastTimeStamp = block.timestamp;
+      requestBytes();
     }
   }
 }
