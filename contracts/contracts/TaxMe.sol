@@ -11,6 +11,7 @@ interface TaxStoreInterface {
 }
 
 error TaxMe_CountryNotSupported(string country);
+error TaxMe_ProductCategoryNotSupported(string productCategory);
 error TaxMe_AmountInsufficient(uint256 amount);
 
 /**
@@ -166,54 +167,61 @@ contract TaxMe is Ownable {
   {
     companyAddress = companiesAddresses[company];
 
-    (uint256 rate, uint256 nationalRate) = getTaxRates(
+    (uint256 regionalRate, uint256 nationalRate) = getTaxRates(
       productCategoryId,
       clientState,
       companyAddress
     );
 
-    regionalTaxAmount = (fullAmount * rate / 1000) / 100;
+    regionalTaxAmount = (fullAmount * regionalRate / 1000) / 100;
     nationalTaxAmount = (fullAmount * nationalRate/ 1000) / 100;
     return (regionalTaxAmount, nationalTaxAmount, companyAddress);
   }
-  function stringsEqual(string memory a, string memory b) internal pure returns (bool) {
-    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
-  }
-
+ 
   function getTaxRates(
     string calldata productCategoryId,
     string calldata clientState,
     _Address memory companyAddress
-  ) public view returns (uint256 localRate, uint256 nationalRate) {
-    if (stringsEqual(productCategoryId, "1")) {
+  ) public view returns (uint256 regionalRate, uint256 nationalRate) {
+    if (!stringsEqual(productCategoryId, "1")) {
+      revert TaxMe_ProductCategoryNotSupported(productCategoryId);
+    }
       
-      string memory gst = taxStore.taxes('gst');
-      string memory pst = taxStore.taxes(companyAddress.state);
-      console.log("GST: %s", gst);
-      console.log("PST: %s", pst);
+    string memory gst = taxStore.taxes('gst');
+    string memory pst = taxStore.taxes(companyAddress.state);
 
-      return (9000, 5000);
+    nationalRate = stringToUint(gst);
+    if (stringsEqual(companyAddress.state, clientState)) {
+      regionalRate = stringToUint(pst);
+    } else {
+      regionalRate = 0;
     }
   }
 
-  function numberFromAscII(bytes1 b) private pure returns (uint8 res) {
-        if (b>="0" && b<="9") {
-            return uint8(b) - uint8(bytes1("0"));
-        } else if (b>="A" && b<="F") {
-            return 10 + uint8(b) - uint8(bytes1("A"));
-        } else if (b>="a" && b<="f") {
-            return 10 + uint8(b) - uint8(bytes1("a"));
-        }
-        return uint8(b); // or return error ... 
-    }
+  // utils
+  function stringsEqual(string memory a, string memory b) internal pure returns (bool) {
+    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
+  }
 
   function stringToUint(string memory str) internal pure returns (uint) {
-    bytes memory b = bytes(str);
-    uint256 number = 0;
-    for(uint i=0;i<b.length;i++){
-        number = number << 4; // or number = number * 16 
-        number |= numberFromAscII(b[i]); // or number += numberFromAscII(b[i]);
+    // from provable lib
+    bytes memory bresult = bytes(str);
+    uint mint = 0;
+    // decimals?
+    uint _b = 0;
+    bool decimals = false;
+    for (uint i=0; i<bresult.length; i++){
+      // using uint8 because the numbers are small < 10000
+        if ((uint8(bresult[i]) >= 48)&&(uint8(bresult[i]) <= 57)){
+            if (decimals){
+                if (_b == 0) break;
+                else _b--;
+            }
+            mint *= 10;
+            mint += uint8(bresult[i]) - 48;
+        } else if (uint8(bresult[i]) == 46) decimals = true;
     }
-    return number; 
+    if (_b > 0) mint *= 10**_b;
+    return mint;
   }
 }

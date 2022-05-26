@@ -2,9 +2,13 @@
 
 commands:
 
-npm run compile
-npm hardhat deploy
-npm run test
+```
+npm run test 
+npx hardhat run scripts/deploy-taxstore.ts --network rinkeby
+npx hardhat run scripts/deploy-taxme.ts --network rinkeby
+```
+
+## Inspired from Chainlink starter boilerplate: 
 
 
 <br/>

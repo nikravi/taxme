@@ -3,7 +3,7 @@ import { assert, expect } from "chai"
 import { BigNumber } from "ethers"
 import { deployments, network, ethers } from "hardhat"
 import { developmentChains } from "../../helper-hardhat-config"
-import { CUSDToken} from "../../typechain"
+import { CUSDToken } from "../../typechain"
 import { TaxMe } from "../../typechain/TaxMe"
 
 !developmentChains.includes(network.name)
@@ -61,8 +61,11 @@ import { TaxMe } from "../../typechain/TaxMe"
 
       describe("owner adds tax collector", () => {
         it("adds tax collector", async () => {
-          const [signer, taxCollector, otherTaxCollector]: SignerWithAddress[] =
-            await ethers.getSigners()
+          const [
+            signer,
+            taxCollector,
+            otherTaxCollector,
+          ]: SignerWithAddress[] = await ethers.getSigners()
           // console.log(await taxMe.companiesAddresses(signer.address));
           await expect(taxMe.addTaxCollector(province, taxCollector.address))
             .to.emit(taxMe, "UpdateTaxCollector")
@@ -76,8 +79,11 @@ import { TaxMe } from "../../typechain/TaxMe"
         })
 
         it("does not allow setting the tax collector by non-owner", async () => {
-          const [signer, taxCollector, otherTaxCollector]: SignerWithAddress[] =
-            await ethers.getSigners()
+          const [
+            signer,
+            taxCollector,
+            otherTaxCollector,
+          ]: SignerWithAddress[] = await ethers.getSigners()
           await expect(
             // call the function with another account
             taxMe.connect(otherTaxCollector).addTaxCollector(province, taxCollector.address)
@@ -100,23 +106,25 @@ import { TaxMe } from "../../typechain/TaxMe"
           await taxMe.connect(owner).addTaxCollector(province, taxCollector.address)
 
           // allow erc20 transfer from seller to contract
-          await CUSDToken.connect(buyer).approve(taxMe.address, ethers.constants.MaxUint256);
+          await CUSDToken.connect(buyer).approve(taxMe.address, ethers.constants.MaxUint256)
           // register tax collectors
-          await expect(taxMe.addTaxCollector(province, taxCollector.address));
-          await expect(taxMe.addTaxCollector(country, otherTaxCollector.address));
+          await expect(taxMe.addTaxCollector(province, taxCollector.address))
+          await expect(taxMe.addTaxCollector(country, otherTaxCollector.address))
 
           await taxMe
             .connect(buyer)
-            .sale(companyAccount.address, CUSDToken.address, "100", "1", "qc", "ca");
+            .sale(companyAccount.address, CUSDToken.address, "100", "1", "qc", "ca")
 
-            // net amount
-          expect((await CUSDToken.balanceOf(companyAccount.address)).toString()).to.eq("100");
-          
+          // net amount
+          expect((await CUSDToken.balanceOf(companyAccount.address)).toString()).to.eq("100")
+
+          // gst
+          expect(
+            await taxMe.companiesTaxes(companyAccount.address, otherTaxCollector.address)
+          ).to.eq("5")
+          // pst
           expect(await taxMe.companiesTaxes(companyAccount.address, taxCollector.address)).to.eq(
-            "9"
-          )
-          expect(await taxMe.companiesTaxes(companyAccount.address, otherTaxCollector.address)).to.eq(
-            "5"
+            "0"
           )
         })
       })

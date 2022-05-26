@@ -1,8 +1,47 @@
 [
     {
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_taxStore",
+          "type": "address"
+        }
+      ],
       "stateMutability": "nonpayable",
       "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "TaxMe_AmountInsufficient",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "country",
+          "type": "string"
+        }
+      ],
+      "name": "TaxMe_CountryNotSupported",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "productCategory",
+          "type": "string"
+        }
+      ],
+      "name": "TaxMe_ProductCategoryNotSupported",
+      "type": "error"
     },
     {
       "anonymous": false,
@@ -217,6 +256,72 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "productCategoryId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "clientState",
+          "type": "string"
+        },
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "city",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "state",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "postalCode",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "subAdministrativeArea",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "country",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "isoCountryCode",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct TaxMe._Address",
+          "name": "companyAddress",
+          "type": "tuple"
+        }
+      ],
+      "name": "getTaxRates",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "regionalRate",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "nationalRate",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "owner",
       "outputs": [
@@ -288,7 +393,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "fullAmount",
+          "name": "amount",
           "type": "uint256"
         },
         {
@@ -298,7 +403,7 @@
         },
         {
           "internalType": "string",
-          "name": "clientPostalCode",
+          "name": "clientState",
           "type": "string"
         },
         {

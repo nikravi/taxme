@@ -15,7 +15,7 @@ import {
 import {
   TaxMeContractAddress,
   TaxStoreContractAddress,
-  TaxStoreOwner,
+  StoreOwner,
 } from "../constants/addresses";
 import abiTaxStore from "../constants/abi-taxstore.json";
 import abiTaxMe from "../constants/abi-taxme.json";
@@ -257,7 +257,7 @@ const CartPage = () => {
     contractAddress: TaxMeContractAddress!,
     functionName: "sale",
     params: {
-      company: TaxStoreOwner!,
+      company: StoreOwner!,
       token: selectedPaymentMethod.address,
       fullAmount: floatToUIntPrepare(
         subtotal + selectedDeliveryMethod.price,
