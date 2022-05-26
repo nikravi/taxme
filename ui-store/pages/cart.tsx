@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Layout from "../components/Layout";
-
 import { useEffect, useState } from "react";
 import { useMoralis, useMoralisQuery, useWeb3Contract } from "react-moralis";
 import { product, products } from "../utils/products";
@@ -10,10 +9,18 @@ import {
   cartAddToCart,
   classNames,
   formatCurrency,
-  sanitizeTaxData,
+  HexToDec,
+  taxNumberToFloat,
 } from "../utils/utils";
-import { TaxStoreContractAddress } from "../constants/addresses";
+import {
+  TaxMeContractAddress,
+  TaxStoreContractAddress,
+  TaxStoreOwner,
+} from "../constants/addresses";
 import abiTaxStore from "../constants/abi-taxstore.json";
+import abiTaxMe from "../constants/abi-taxme.json";
+import abiUsdc from "../constants/abi-usdc.json";
+import { useRouter } from "next/router";
 
 const deliveryMethods = [
   {
@@ -30,10 +37,26 @@ const deliveryMethods = [
   },
 ];
 
+interface TokenAllowance {
+  // address of the token contract
+  [token: string]: number;
+}
 const paymentMethods = [
-  { id: "usdc", title: "USDC" },
-  { id: "usdt", title: "USDT" },
+  {
+    id: "usdc",
+    title: "USDC",
+    decimals: 6,
+    address: "0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b",
+  },
+  {
+    id: "usdt",
+    title: "USDT",
+    decimals: 18,
+    address: "0xD92E713d051C37EbB2561803a3b5FBAbc4962431",
+  },
 ];
+
+;
 
 const CartPage = () => {
   const {
@@ -45,7 +68,12 @@ const CartPage = () => {
     isWeb3Enabled,
   } = useMoralis();
   const { Moralis } = useMoralis();
+  const router = useRouter();
 
+  const floatToUIntPrepare = (value: number, decimals: number) => {
+    return Moralis.Units.Token(value.toFixed(decimals), decimals);
+  };
+  
   const { fetch } = useMoralisQuery(
     "Cart",
     (query) => query.equalTo("userId", user?.id),
@@ -71,15 +99,42 @@ const CartPage = () => {
   const [pstTax, setPstTax] = useState(0);
   const [salesTax, setSalesTax] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
+  const [tokenAllowance, setTokenAllowance] = useState<TokenAllowance>({});
+
   const [selectedDeliveryMethod, setSelectedDeliveryMethod] = useState(
     deliveryMethods[0]
   );
+
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
+    paymentMethods[0]
+  );
+
+  useEffect(() => {
+    if (!isWeb3Enabled || !isAuthenticated) {
+      return;
+    }
+
+    allowance({
+      onSuccess: (allowance: any) => {
+        console.log("allowance", selectedPaymentMethod.id, HexToDec(allowance));
+
+        setTokenAllowance({
+          ...tokenAllowance,
+          [selectedPaymentMethod.address]: HexToDec(allowance),
+        });
+      },
+      onError: (error) => {
+        console.error(error);
+      },
+    });
+  }, [selectedPaymentMethod, isWeb3Enabled]);
 
   const fetchTaxes = () => {
     getGstTax({
       onSuccess: (gst: number) => {
         console.log("gst", gst);
-        setGstTax(sanitizeTaxData(gst));
+
+        setGstTax(taxNumberToFloat(gst));
       },
       onError: (error) => {
         console.error(error);
@@ -88,13 +143,14 @@ const CartPage = () => {
     getPstTax({
       onSuccess: (pst: number) => {
         console.log("pst", pst);
-        setPstTax(sanitizeTaxData(pst));
+
+        setPstTax(taxNumberToFloat(pst));
       },
       onError: (error) => {
         console.error(error);
       },
     });
-  }
+  };
   useEffect(() => {
     if (!isWeb3Enabled || !isAuthenticated) {
       return;
@@ -114,7 +170,7 @@ const CartPage = () => {
           });
           setCartProducts(cartProducts);
 
-          fetchTaxes()
+          fetchTaxes();
         }
       },
       onError: (error) => {
@@ -166,6 +222,95 @@ const CartPage = () => {
         console.error(error);
       }
     );
+  };
+
+  const { runContractFunction: allowance } = useWeb3Contract({
+    abi: abiUsdc,
+    contractAddress: selectedPaymentMethod.address!,
+    functionName: "allowance",
+    params: {
+      owner: user?.get("ethAddress"),
+      spender: TaxMeContractAddress,
+    },
+  });
+
+  const {
+    runContractFunction: approve,
+    isLoading: isLoadingApprove,
+    isFetching: isFetchingApprove,
+  } = useWeb3Contract({
+    abi: abiUsdc,
+    contractAddress: selectedPaymentMethod.address!,
+    functionName: "approve",
+    params: {
+      _spender: TaxMeContractAddress,
+      _value: floatToUIntPrepare(grandTotal * 2, selectedPaymentMethod.decimals),
+    },
+  });
+
+  const {
+    runContractFunction: sale,
+    isFetching,
+    isLoading,
+  } = useWeb3Contract({
+    abi: abiTaxMe,
+    contractAddress: TaxMeContractAddress!,
+    functionName: "sale",
+    params: {
+      company: TaxStoreOwner!,
+      token: selectedPaymentMethod.address,
+      fullAmount: floatToUIntPrepare(
+        subtotal + selectedDeliveryMethod.price,
+        selectedPaymentMethod
+      .decimals),
+      // taxable product
+      productCategoryId: "1",
+      clientPostalCode: "H0H0H0",
+      clientIsoCountryCode: "CA",
+    },
+  });
+
+  const approveSpend = (ev) => {
+    ev.preventDefault();
+    
+
+    approve({
+      onSuccess: (approve: any) => {
+        console.log("approve", approve);
+        (async () => {
+          const confirmations = 1;
+          console.log(`waiting ${confirmations} confirmations`);
+
+          await approve.wait(confirmations);
+          console.log("confirmed");
+          sale({
+            onSuccess: (tx) => {
+              console.log("sale tx", tx);
+
+              setCartProducts([]);
+              updateSubtotal([]);
+              cart.set("products", []);
+              cart.save().then(
+                (c) => {
+                  console.log("updated cart", c);
+                  // redirect to thank you page
+                  router.push("/thank-you");
+                },
+                (error) => {
+                  console.error(error);
+                }
+              );
+            },
+            onError: (error) => {
+              console.error(error);
+            },
+          });
+        })();
+      },
+      onError: (error) => {
+        console.error(error);
+      },
+    });
   };
 
   return (
@@ -550,47 +695,44 @@ const CartPage = () => {
                     <fieldset className="mt-4">
                       <legend className="sr-only">Payment type</legend>
                       <div className="space-y-4 sm:flex sm:items-center sm:space-y-0 sm:space-x-10">
-                        {paymentMethods.map(
-                          (paymentMethod, paymentMethodIdx) => (
-                            <div
-                              key={paymentMethod.id}
-                              className="flex items-center"
-                            >
-                              {paymentMethodIdx === 0 ? (
-                                <input
-                                  id={paymentMethod.id}
-                                  name="payment-type"
-                                  type="radio"
-                                  defaultChecked
-                                  className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                />
-                              ) : (
-                                <input
-                                  id={paymentMethod.id}
-                                  name="payment-type"
-                                  type="radio"
-                                  className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                />
-                              )}
+                        {paymentMethods.map((paymentMethod) => (
+                          <div
+                            key={paymentMethod.id}
+                            className="flex items-center"
+                          >
+                            <input
+                              id={paymentMethod.id}
+                              name="payment-type"
+                              type="radio"
+                              value={paymentMethod.id}
+                              checked={
+                                selectedPaymentMethod.id === paymentMethod.id
+                              }
+                              onChange={() => {
+                                setSelectedPaymentMethod(paymentMethod);
+                              }}
+                              className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
 
-                              <label
-                                htmlFor={paymentMethod.id}
-                                className="ml-3 block text-sm font-medium text-gray-700"
-                              >
-                                {paymentMethod.title}
-                              </label>
-                            </div>
-                          )
-                        )}
+                            <label
+                              htmlFor={paymentMethod.id}
+                              className="ml-3 block text-sm font-medium text-gray-700"
+                            >
+                              {paymentMethod.title}
+                            </label>
+                          </div>
+                        ))}
                       </div>
                     </fieldset>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full rounded-md border border-transparent bg-indigo-600 py-3 px-4 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50"
+                    onClick={approveSpend}
+                    disabled={isLoadingApprove || isFetchingApprove}
+                    className="w-full rounded-md border border-transparent bg-indigo-600 py-3 px-4 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 disabled:opacity-75"
                   >
-                    Confirm order
+                    Confirm Order
                   </button>
                 </div>
               </div>

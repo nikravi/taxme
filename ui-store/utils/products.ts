@@ -1,7 +1,7 @@
 export const product = {
   productId: '1',
   name: 'Zip Tote Basket',
-  price: 100,
+  price: 1,
   rating: 4,
   images: [
     {

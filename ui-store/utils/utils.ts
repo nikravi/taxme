@@ -7,20 +7,25 @@ export function ethAddressDisplay(address: string) {
   return address.slice(0, 6) + '...' + address.slice(-4)
 }
 
-export const cartAddToCart = (cart, productId, quantity = 1, addition = false) => {
+export const cartAddToCart = (
+  cart,
+  productId,
+  quantity = 1,
+  addition = false,
+) => {
   if (!cart.get('products')) {
     cart.set('products', [])
   }
-  const q = parseInt(quantity.toString(), 10);
+  const q = parseInt(quantity.toString(), 10)
   const currentProduct = cart
     .get('products')
     .find((p) => p.productId === productId)
   if (currentProduct) {
-      if (addition) {
-        currentProduct.quantity += q
-      } else {
-        currentProduct.quantity = q
-      }
+    if (addition) {
+      currentProduct.quantity += q
+    } else {
+      currentProduct.quantity = q
+    }
   } else {
     cart.get('products').push({
       productId,
@@ -36,9 +41,12 @@ export function formatCurrency(value) {
   }).format(value)
 }
 
+export function taxNumberToFloat(value: string | number) {
+  // 5000 → 5%
+  return parseInt(value.toString(), 10) / 1000
+}
 
-export function sanitizeTaxData(value: string | number) {
-    // remove all non-numeric characters
-    // 5000 → 5%
-    return parseInt(value.toString().replace("\.", ""), 10) / 1000;
+export function HexToDec(val: any): number {
+  if (val?._isBigNumber) return parseInt(val._hex, 16)
+  else return -1
 }

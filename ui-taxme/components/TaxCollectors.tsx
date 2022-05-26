@@ -51,7 +51,7 @@ const TaxCollectors = () => {
     error,
     isLoading: collectorsAreLoading,
   } = useMoralisQuery<TaxCollector>(
-    "taxCollectors",
+    "taxCollectorsB",
     (q) => q.descending("createdAt"),
     [],
     {
@@ -184,7 +184,7 @@ const TaxCollectors = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {newCollector ? (
-                    <tr>
+                    <tr key="new">
                       <td></td>
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                         <input
@@ -244,7 +244,11 @@ const TaxCollectors = () => {
                     </tr>
                   ) : null}
                   {taxCollectors.map((collector) => (
-                    <TaxCollectorRow collector={collector} isOwner={isOwner} />
+                    <TaxCollectorRow
+                      collector={collector}
+                      isOwner={isOwner}
+                      key={collector.get("transaction_hash")}
+                    />
                   ))}
                 </tbody>
               </table>

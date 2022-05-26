@@ -20,10 +20,10 @@ const QuickSignUp = ({ showLoginInNavbar = true }) => {
   const [isRegistered, setIsRegistered] = React.useState(false);
 
   useEffect(() => {
-    if (isWeb3Enabled) {
+    if (isWeb3Enabled && isAuthenticated) {
       checkIfUserIsRegistered();
     }
-  }, [isWeb3Enabled]);
+  }, [isWeb3Enabled, isAuthenticated]);
 
   const { runContractFunction: companiesAddresses } = useWeb3Contract({
     abi: abi,
