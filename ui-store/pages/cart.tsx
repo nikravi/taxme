@@ -308,7 +308,7 @@ const CartPage = () => {
 
     approve({
       onSuccess: (approveTx: any) => {
-        console.log("approve", approve);
+        console.log("approve", approveTx);
         (async () => {
           const confirmations = 1;
           console.log(`waiting ${confirmations} confirmations`);

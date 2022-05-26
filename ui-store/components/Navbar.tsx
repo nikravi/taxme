@@ -89,7 +89,7 @@ const Navbar = () => {
       setNavbarItems(navigation.main.filter((item) => !item.hideTopView));
     } else {
       setNavbarItems(
-        navigation.main.filter((item) => !item.hideTopView && !item.owner)
+        navigation.main.filter((item) => !item.hideTopView )
       );
     }
   }, [isAuthenticated]);
@@ -255,12 +255,14 @@ const Navbar = () => {
                   as="a"
                   href={item.href}
                   className={classNames(
-                    item.current
+                    router.pathname === item.href
                       ? "bg-gray-900 text-white"
                       : "text-gray-300 hover:bg-gray-700 hover:text-white",
                     "block rounded-md px-3 py-2 text-base font-medium"
                   )}
-                  aria-current={item.current ? "page" : undefined}
+                  aria-current={
+                    router.pathname === item.href ? "page" : undefined
+                  }
                 >
                   {item.name}
                 </Disclosure.Button>

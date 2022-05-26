@@ -7,6 +7,7 @@
     "dev": "next -p 8080",
     "build": "next build",
     "start": "next start",
+    "export": "next build && next export",
     "type-check": "tsc"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "tailwindcss": "^3.0.24"
   },
   "devDependencies": {
+    "@ethersproject/abi": "^5.6.3",
     "@tailwindcss/aspect-ratio": "^0.4.0",
     "@tailwindcss/forms": "^0.5.0",
     "@tailwindcss/typography": "^0.5.2",
@@ -27,6 +29,7 @@
     "@types/react": "^17.0.44",
     "@types/react-dom": "^17.0.16",
     "autoprefixer": "^10.4.5",
+    "ethers": "^5.6.8",
     "postcss": "^8.4.12",
     "prettier": "^2.6.2",
     "prettier-plugin-tailwindcss": "^0.1.10",
