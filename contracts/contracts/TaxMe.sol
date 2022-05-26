@@ -6,6 +6,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "hardhat/console.sol";
 
+interface TaxStoreInterface {
+  function taxes(string memory name) external view returns (string memory taxValue);
+}
+
+error TaxMe_CountryNotSupported(string country);
+error TaxMe_AmountInsufficient(uint256 amount);
+
 /**
  * @title The TaxMe contract
  * @notice A contract that registers new companies and withholds the sales taxes for them
@@ -50,10 +57,10 @@ contract TaxMe is Ownable {
     uint256 nationalTaxAmount
   );
 
-  /**
-   * @notice Executes once when a contract is created to initialize state variables
-   */
-  constructor() {}
+  TaxStoreInterface internal immutable taxStore;
+  constructor(address _taxStore) {
+    taxStore = TaxStoreInterface(_taxStore);
+  }
 
   function addTaxCollector(string calldata region, address collector) public onlyOwner {
     address previousTaxCollector = taxCollectors[region];
@@ -85,45 +92,49 @@ contract TaxMe is Ownable {
   function sale(
     address company,
     address token,
-    uint256 fullAmount,
+    uint256 amount,
     string calldata productCategoryId,
-    string calldata clientPostalCode,
+    string calldata clientState,
     string calldata clientIsoCountryCode
   ) public payable {
-    require(fullAmount > 0);
+    if (amount == 0) {
+      revert TaxMe_AmountInsufficient(amount);
+    }
+    if (!stringsEqual(clientIsoCountryCode, "ca")) {
+      revert TaxMe_CountryNotSupported(clientIsoCountryCode);
+    }
 
     (
-      uint256 regionalAmount,
-      uint256 nationalAmount,
+      uint256 regionalTaxAmount,
+      uint256 nationalTaxAmount,
       _Address memory companyAddress
     ) = _calculateAmounts(
         company,
-        fullAmount,
+        amount,
         productCategoryId,
-        clientPostalCode,
-        clientIsoCountryCode
+        clientState
       );
 
-    IERC20(token).safeTransferFrom(msg.sender, address(this), regionalAmount + nationalAmount);
-    _registerCompanyTax(company, companyAddress, regionalAmount, nationalAmount);
+    IERC20(token).safeTransferFrom(msg.sender, address(this), regionalTaxAmount + nationalTaxAmount);
+    _registerCompanyTax(company, companyAddress, regionalTaxAmount, nationalTaxAmount);
 
     // transfer amount after taxes
-    IERC20(token).safeTransferFrom(msg.sender, company, fullAmount);
+    IERC20(token).safeTransferFrom(msg.sender, company, amount);
 
-    emit Sale(company, fullAmount, regionalAmount, nationalAmount);
+    emit Sale(company, amount, regionalTaxAmount, nationalTaxAmount);
     // todo: store exchange rate of token for ACB accounting. Chainlink logs in Filecoin?
   }
 
   function _registerCompanyTax(
     address company,
     _Address memory companyAddress,
-    uint256 regionalAmount,
-    uint256 nationalAmount
+    uint256 regionalTaxAmount,
+    uint256 nationalTaxAmount
   ) private {
     address regionalTaxCollector = taxCollectors[companyAddress.state];
-    _addTax(company, regionalTaxCollector, regionalAmount);
+    _addTax(company, regionalTaxCollector, regionalTaxAmount);
     address nationalTaxCollector = taxCollectors[companyAddress.country];
-    _addTax(company, nationalTaxCollector, nationalAmount);
+    _addTax(company, nationalTaxCollector, nationalTaxAmount);
   }
 
   // internal tracking of the tax amount for a company
@@ -143,14 +154,13 @@ contract TaxMe is Ownable {
     address company,
     uint256 fullAmount,
     string calldata productCategoryId,
-    string calldata clientPostalCode,
-    string calldata clientIsoCountryCode
+    string calldata clientState
   )
     internal
     view
     returns (
-      uint256 regionalAmount,
-      uint256 nationalAmount,
+      uint256 regionalTaxAmount,
+      uint256 nationalTaxAmount,
       _Address memory companyAddress
     )
   {
@@ -158,23 +168,52 @@ contract TaxMe is Ownable {
 
     (uint256 rate, uint256 nationalRate) = getTaxRates(
       productCategoryId,
-      clientPostalCode,
+      clientState,
       companyAddress
     );
 
-    regionalAmount = (fullAmount * rate / 1000) / 100;
-    nationalAmount = (fullAmount * nationalRate/ 1000) / 100;
-    return (regionalAmount, nationalAmount, companyAddress);
+    regionalTaxAmount = (fullAmount * rate / 1000) / 100;
+    nationalTaxAmount = (fullAmount * nationalRate/ 1000) / 100;
+    return (regionalTaxAmount, nationalTaxAmount, companyAddress);
+  }
+  function stringsEqual(string memory a, string memory b) internal pure returns (bool) {
+    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
   }
 
   function getTaxRates(
     string calldata productCategoryId,
-    string calldata clientPostalCode,
+    string calldata clientState,
     _Address memory companyAddress
-  ) internal pure returns (uint256 localRate, uint256 nationalRate) {
-    if (keccak256(abi.encodePacked(productCategoryId)) == keccak256(abi.encodePacked("1"))) {
-      // todo: get tax rates from the oracle
+  ) public view returns (uint256 localRate, uint256 nationalRate) {
+    if (stringsEqual(productCategoryId, "1")) {
+      
+      string memory gst = taxStore.taxes('gst');
+      string memory pst = taxStore.taxes(companyAddress.state);
+      console.log("GST: %s", gst);
+      console.log("PST: %s", pst);
+
       return (9000, 5000);
     }
+  }
+
+  function numberFromAscII(bytes1 b) private pure returns (uint8 res) {
+        if (b>="0" && b<="9") {
+            return uint8(b) - uint8(bytes1("0"));
+        } else if (b>="A" && b<="F") {
+            return 10 + uint8(b) - uint8(bytes1("A"));
+        } else if (b>="a" && b<="f") {
+            return 10 + uint8(b) - uint8(bytes1("a"));
+        }
+        return uint8(b); // or return error ... 
+    }
+
+  function stringToUint(string memory str) internal pure returns (uint) {
+    bytes memory b = bytes(str);
+    uint256 number = 0;
+    for(uint i=0;i<b.length;i++){
+        number = number << 4; // or number = number * 16 
+        number |= numberFromAscII(b[i]); // or number += numberFromAscII(b[i]);
+    }
+    return number; 
   }
 }

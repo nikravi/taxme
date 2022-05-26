@@ -14,9 +14,8 @@ const deployFunction: DeployFunction = async ({ getNamedAccounts, deployments })
 
   const chainId: number | undefined = network.config.chainId
   if (!chainId) return
+  let taxStoreContract;
 
-  let linkTokenAddress: string | undefined
-  let oracle: string | undefined
   let additionalMessage: string = ``
   // set log level to ignore non errors
   ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
@@ -29,12 +28,22 @@ const deployFunction: DeployFunction = async ({ getNamedAccounts, deployments })
       from: buyer,
       args: [1000],
     })
-    linkTokenAddress = linkToken.address
-    oracle = MockOracle.address
-    additionalMessage = ` --linkaddress ${linkTokenAddress}`
-  } else {
-    linkTokenAddress = networkConfig[chainId].linkToken
-    oracle = networkConfig[chainId].oracle
+
+
+    // sample ERC20 stable token
+    taxStoreContract = await deploy(`MockTaxStore`, {
+      from: deployer,
+      args: [],
+    })
+
+    const taxStore = await ethers.getContract(`MockTaxStore`)
+    const transactionQC  = await taxStore.registerTax('qc', '9975')
+    await transactionQC.wait(1)
+    const transactionON  = await taxStore.registerTax('on', '7000')
+    await transactionON.wait(1)
+    const transactionGST  = await taxStore.registerTax('gst', '5000')
+    await transactionGST.wait(1)
+
   }
 
   const waitBlockConfirmations: number = developmentChains.includes(network.name)
@@ -43,7 +52,7 @@ const deployFunction: DeployFunction = async ({ getNamedAccounts, deployments })
   log(`----------------------------------------------------`)
   const taxMe = await deploy("TaxMe", {
     from: deployer,
-    args: [],
+    args: [taxStoreContract?.address],
     log: true,
     waitConfirmations: waitBlockConfirmations,
   })

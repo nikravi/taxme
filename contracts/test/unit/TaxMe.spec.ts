@@ -3,7 +3,7 @@ import { assert, expect } from "chai"
 import { BigNumber } from "ethers"
 import { deployments, network, ethers } from "hardhat"
 import { developmentChains } from "../../helper-hardhat-config"
-import { CUSDToken, MockV3Aggregator, PriceConsumerV3 } from "../../typechain"
+import { CUSDToken} from "../../typechain"
 import { TaxMe } from "../../typechain/TaxMe"
 
 !developmentChains.includes(network.name)
@@ -12,7 +12,7 @@ import { TaxMe } from "../../typechain/TaxMe"
       let taxMe: TaxMe
       let CUSDToken: CUSDToken
       const city = "Ottawa"
-      const province = "Ontario"
+      const province = "on"
       const country = "Canada"
       const postalCode = "K1G 0Z3"
       const isoCode = "CA"
@@ -107,7 +107,7 @@ import { TaxMe } from "../../typechain/TaxMe"
 
           await taxMe
             .connect(buyer)
-            .sale(companyAccount.address, CUSDToken.address, "100", "1", "K2J 6E5", "CA");
+            .sale(companyAccount.address, CUSDToken.address, "100", "1", "qc", "ca");
 
             // net amount
           expect((await CUSDToken.balanceOf(companyAccount.address)).toString()).to.eq("100");
