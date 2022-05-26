@@ -306,31 +306,35 @@ const CartPage = () => {
     ev.preventDefault();
 
     approve({
-      onSuccess: (approve: any) => {
+      onSuccess: (approveTx: any) => {
         console.log("approve", approve);
         (async () => {
           const confirmations = 1;
           console.log(`waiting ${confirmations} confirmations`);
 
-          await approve.wait(confirmations);
+          await approveTx.wait(confirmations);
           console.log("confirmed");
           sale({
-            onSuccess: (tx) => {
-              console.log("sale tx", tx);
+            onSuccess: (saleTx: any) => {
+              console.log("sale tx", saleTx);
+              (async () => {
+                await saleTx.wait(confirmations);
+                setCartProducts([]);
+                updateSubtotal([]);
+                cart.set("products", []);
+                cart.save().then(
+                  (c) => {
+                    console.log("updated cart", c);
+                    // redirect to thank you page
+                    router.push("/thank-you");
+                  },
+                  (error) => {
+                    console.error(error);
+                  }
+                );
+              })();
 
-              setCartProducts([]);
-              updateSubtotal([]);
-              cart.set("products", []);
-              cart.save().then(
-                (c) => {
-                  console.log("updated cart", c);
-                  // redirect to thank you page
-                  router.push("/thank-you");
-                },
-                (error) => {
-                  console.error(error);
-                }
-              );
+              
             },
             onError: (error) => {
               console.error(error);

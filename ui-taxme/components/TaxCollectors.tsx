@@ -161,13 +161,13 @@ const TaxCollectors = () => {
                   <tr>
                     <th
                       scope="col"
-                      className="py-3 pl-4 pr-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 sm:pl-6"
+                      className="py-3 pl-4 pr-3 text-left text-xs font-medium uppercase text-gray-500 sm:pl-6"
                     >
                       Created on
                     </th>
                     <th
                       scope="col"
-                      className="py-3 pl-4 pr-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 sm:pl-6"
+                      className="py-3 pl-4 pr-3 text-left text-xs font-medium uppercase text-gray-500 sm:pl-6"
                     >
                       Region
                     </th>

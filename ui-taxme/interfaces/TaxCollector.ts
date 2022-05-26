@@ -1,4 +1,4 @@
-interface EthEvent {
+export interface EthEvent {
     address: string;
     transaction_hash: string;
     block_hash: string;

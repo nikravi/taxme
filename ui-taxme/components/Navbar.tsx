@@ -152,7 +152,7 @@ const Navbar = ({ showLoginInNavbar = true }) => {
                         <Menu.Item>
                           {({ active }) => (
                             <a
-                              href={`https://etherscan.io/address/${user.get(
+                              href={`https://rinkeby.etherscan.io/address/${user.get(
                                 "ethAddress"
                               )}`}
                               target="_blank"

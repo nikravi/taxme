@@ -159,7 +159,7 @@ const Navbar = () => {
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
                 <Link href="/cart">
                   <a
-                    href='#'
+                    href="#"
                     className="relative mr-4 rounded-full bg-white p-1 pr-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                   >
                     <ShoppingCartIcon
@@ -171,7 +171,10 @@ const Navbar = () => {
                         {cart
                           .get("products")
                           .map((p) => p.quantity)
-                          .reduce((qPrev, q) => parseInt(q, 10) + parseInt(qPrev, 10), 0)}
+                          .reduce(
+                            (qPrev, q) => parseInt(q, 10) + parseInt(qPrev, 10),
+                            0
+                          )}
                       </span>
                     ) : null}
                   </a>
@@ -207,7 +210,7 @@ const Navbar = () => {
                         <Menu.Item>
                           {({ active }) => (
                             <a
-                              href={`https://etherscan.io/address/${user.get(
+                              href={`https://rinkeby.etherscan.io/address/${user.get(
                                 "ethAddress"
                               )}`}
                               target="_blank"

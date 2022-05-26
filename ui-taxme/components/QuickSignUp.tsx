@@ -127,7 +127,7 @@ const QuickSignUp = ({ showLoginInNavbar = true }) => {
                 </div>
                 <div>
                   <a
-                    href={`https://etherscan.io/address/${user.get(
+                    href={`https://rinkeby.etherscan.io/address/${user.get(
                       "ethAddress"
                     )}`}
                     target="_blank"

@@ -6,6 +6,7 @@ import TaxCollector from "../interfaces/TaxCollector";
 import abi from "../constants/abi-taxme.json";
 import { TaxMeContractAddress } from "../constants/addresses";
 import { ethAddressDisplay } from "../utils/utils";
+import { codes } from "../constants/keccak";
 
 //Moralis.Object<TaxCollector>
 const TaxCollectorRow = ({ collector, isOwner }) => {
@@ -58,7 +59,7 @@ const TaxCollectorRow = ({ collector, isOwner }) => {
         {isEdit ? null : collector.get("createdAt")?.toLocaleString()}
       </td>
       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-        {collector.get("region")}
+        {codes[collector.get("region")] || collector.get("region")}
       </td>
       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
         {isEdit ? (
@@ -75,18 +76,18 @@ const TaxCollectorRow = ({ collector, isOwner }) => {
                 address: e.target.value,
               });
             }}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-1"
+            className="block w-full rounded-md border-gray-300 p-1 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
         ) : (
           <a
-            href={`https://etherscan.io/address/${collector.get(
+            href={`https://rinkeby.etherscan.io/address/${collector.get(
               "newTaxCollector"
             )}`}
             target="_blank"
             className="underline"
             rel="noreferrer"
           >
-            {ethAddressDisplay(collector.get("newTaxCollector"))}
+            {collector.get("newTaxCollector")}
           </a>
         )}
       </td>

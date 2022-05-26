@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useMoralis, useWeb3Contract } from "react-moralis";
 import EditAddress from "../components/EditAddress";
 import Layout from "../components/Layout";
+import Sales from "../components/Sales";
 import TaxCollectors from "../components/TaxCollectors";
 
 import { TaxMeContractAddress } from "../constants/addresses";
@@ -14,6 +15,8 @@ const DashboardPage = () => {
         <EditAddress />
 
         <TaxCollectors />
+
+        <Sales />
       </div>
     </Layout>
   );
