@@ -56,8 +56,6 @@ const paymentMethods = [
   },
 ];
 
-;
-
 const CartPage = () => {
   const {
     isAuthenticated,
@@ -73,8 +71,18 @@ const CartPage = () => {
   const floatToUIntPrepare = (value: number, decimals: number) => {
     return Moralis.Units.Token(value.toFixed(decimals), decimals);
   };
-  
-  const { fetch } = useMoralisQuery(
+  const [clientAddressForm, setClientAddressForm] = useState({
+    country: "Canada",
+    province: "",
+    city: "",
+    postalCode: "",
+    firstName: "",
+    lastName: "",
+    address: "",
+    email: "",
+  });
+
+  const { fetch: fetchCart } = useMoralisQuery(
     "Cart",
     (query) => query.equalTo("userId", user?.id),
     [user?.id],
@@ -90,14 +98,15 @@ const CartPage = () => {
     abi: abiTaxStore,
     contractAddress: TaxStoreContractAddress!,
     functionName: "taxes",
-    params: { "": "qc" },
+    params: { "": clientAddressForm.province },
   });
   const [cart, setCart] = useState(null);
   const [cartProducts, setCartProducts] = useState([]);
   const [subtotal, setSubtotal] = useState(0);
   const [gstTax, setGstTax] = useState(0);
   const [pstTax, setPstTax] = useState(0);
-  const [salesTax, setSalesTax] = useState(0);
+  const [salesGstTax, setSalesGstTax] = useState(0);
+  const [salesPstTax, setSalesPstTax] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
   const [tokenAllowance, setTokenAllowance] = useState<TokenAllowance>({});
 
@@ -130,21 +139,21 @@ const CartPage = () => {
   }, [selectedPaymentMethod, isWeb3Enabled]);
 
   const fetchTaxes = () => {
-    getGstTax({
-      onSuccess: (gst: number) => {
-        console.log("gst", gst);
+    preSale({
+      onSuccess: ([regionalTaxBN, nationalTaxBN]) => {
+        const taxDecimalPlaces = 6;
+        const regionalTax =
+          HexToDec(regionalTaxBN) / Math.pow(10, taxDecimalPlaces);
+        const nationalTax =
+          HexToDec(nationalTaxBN) / Math.pow(10, taxDecimalPlaces);
 
-        setGstTax(taxNumberToFloat(gst));
-      },
-      onError: (error) => {
-        console.error(error);
-      },
-    });
-    getPstTax({
-      onSuccess: (pst: number) => {
-        console.log("pst", pst);
-
-        setPstTax(taxNumberToFloat(pst));
+        setSalesGstTax(nationalTax);
+        setSalesPstTax(regionalTax);
+        console.log(
+          "preSale tx",
+          HexToDec(regionalTaxBN) / Math.pow(10, taxDecimalPlaces),
+          HexToDec(nationalTaxBN) / Math.pow(10, taxDecimalPlaces)
+        );
       },
       onError: (error) => {
         console.error(error);
@@ -156,7 +165,7 @@ const CartPage = () => {
       return;
     }
 
-    fetch({
+    fetchCart({
       onSuccess: (cartFetched) => {
         console.log("cart fetched", cartFetched);
 
@@ -180,8 +189,16 @@ const CartPage = () => {
   }, [isAuthenticated, isWeb3Enabled]);
 
   useEffect(() => {
+    if (!isWeb3Enabled || !isAuthenticated) {
+      return;
+    }
+
+    fetchTaxes();
+  }, [clientAddressForm.province]);
+
+  useEffect(() => {
     updateSubtotal(cartProducts);
-  }, [gstTax, pstTax, selectedDeliveryMethod]);
+  }, [salesGstTax, salesPstTax, selectedDeliveryMethod]);
 
   const updateSubtotal = (cartProducts) => {
     let subt = 0;
@@ -194,13 +211,7 @@ const CartPage = () => {
     let totalPrice = subt;
     totalPrice += selectedDeliveryMethod.price;
 
-    const fedTax = (totalPrice * gstTax) / 100;
-    const provTax = (totalPrice * pstTax) / 100;
-    console.log("fedTax", fedTax);
-    console.log("provTax", provTax);
-
-    setSalesTax(fedTax + provTax);
-    setGrandTotal(totalPrice + fedTax + provTax);
+    setGrandTotal(totalPrice + salesGstTax + salesPstTax);
   };
 
   const handleQuantityChange = (e, productId: any) => {
@@ -244,7 +255,10 @@ const CartPage = () => {
     functionName: "approve",
     params: {
       _spender: TaxMeContractAddress,
-      _value: floatToUIntPrepare(grandTotal * 2, selectedPaymentMethod.decimals),
+      _value: floatToUIntPrepare(
+        grandTotal * 2,
+        selectedPaymentMethod.decimals
+      ),
     },
   });
 
@@ -259,20 +273,37 @@ const CartPage = () => {
     params: {
       company: StoreOwner!,
       token: selectedPaymentMethod.address,
-      fullAmount: floatToUIntPrepare(
+      amount: floatToUIntPrepare(
         subtotal + selectedDeliveryMethod.price,
-        selectedPaymentMethod
-      .decimals),
+        selectedPaymentMethod.decimals
+      ),
       // taxable product
       productCategoryId: "1",
-      clientPostalCode: "H0H0H0",
-      clientIsoCountryCode: "CA",
+      clientState: clientAddressForm.province,
+      clientIsoCountryCode: "ca",
+    },
+  });
+
+  const { runContractFunction: preSale } = useWeb3Contract({
+    abi: abiTaxMe,
+    contractAddress: TaxMeContractAddress!,
+    functionName: "preSale",
+    params: {
+      company: StoreOwner!,
+      // token: selectedPaymentMethod.address,
+      amount: floatToUIntPrepare(
+        subtotal + selectedDeliveryMethod.price,
+        selectedPaymentMethod.decimals
+      ),
+      // taxable product
+      productCategoryId: "1",
+      clientState: clientAddressForm.province,
+      clientIsoCountryCode: "ca",
     },
   });
 
   const approveSpend = (ev) => {
     ev.preventDefault();
-    
 
     approve({
       onSuccess: (approve: any) => {
@@ -339,17 +370,19 @@ const CartPage = () => {
                       id="email-address"
                       name="email-address"
                       autoComplete="email"
+                      onChange={(e) => {
+                        setClientAddressForm({
+                          ...clientAddressForm,
+                          email: e.target.value,
+                        });
+                      }}
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="mt-10 border-t border-gray-200 pt-10">
-                <h2 className="text-lg font-medium text-gray-900">
-                  Shipping information
-                </h2>
-
+              <div className="mt-10 ">
                 <div className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
                   <div>
                     <label
@@ -364,6 +397,12 @@ const CartPage = () => {
                         id="first-name"
                         name="first-name"
                         autoComplete="given-name"
+                        onChange={(e) => {
+                          setClientAddressForm({
+                            ...clientAddressForm,
+                            firstName: e.target.value,
+                          });
+                        }}
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       />
                     </div>
@@ -382,6 +421,12 @@ const CartPage = () => {
                         id="last-name"
                         name="last-name"
                         autoComplete="family-name"
+                        onChange={(e) => {
+                          setClientAddressForm({
+                            ...clientAddressForm,
+                            lastName: e.target.value,
+                          });
+                        }}
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       />
                     </div>
@@ -399,24 +444,13 @@ const CartPage = () => {
                         type="text"
                         name="address"
                         id="address"
+                        onChange={(e) => {
+                          setClientAddressForm({
+                            ...clientAddressForm,
+                            address: e.target.value,
+                          });
+                        }}
                         autoComplete="street-address"
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label
-                      htmlFor="apartment"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Apartment, suite, etc.
-                    </label>
-                    <div className="mt-1">
-                      <input
-                        type="text"
-                        name="apartment"
-                        id="apartment"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       />
                     </div>
@@ -434,6 +468,12 @@ const CartPage = () => {
                         type="text"
                         name="city"
                         id="city"
+                        onChange={(e) => {
+                          setClientAddressForm({
+                            ...clientAddressForm,
+                            city: e.target.value,
+                          });
+                        }}
                         autoComplete="address-level2"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       />
@@ -473,6 +513,12 @@ const CartPage = () => {
                         type="text"
                         name="region"
                         id="region"
+                        onChange={(e) => {
+                          setClientAddressForm({
+                            ...clientAddressForm,
+                            province: e.target.value,
+                          });
+                        }}
                         autoComplete="address-level1"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       />
@@ -491,6 +537,12 @@ const CartPage = () => {
                         type="text"
                         name="postal-code"
                         id="postal-code"
+                        onChange={(e) => {
+                          setClientAddressForm({
+                            ...clientAddressForm,
+                            postalCode: e.target.value,
+                          });
+                        }}
                         autoComplete="postal-code"
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       />
@@ -671,10 +723,16 @@ const CartPage = () => {
                       {formatCurrency(selectedDeliveryMethod.price)}
                     </dd>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <dt className="text-sm">Taxes</dt>
+                  <div className="flex items-center justify-between pt-4">
+                    <dt className="text-sm">Taxes GST</dt>
                     <dd className="text-sm font-medium text-gray-900">
-                      {formatCurrency(salesTax)}
+                      {formatCurrency(salesGstTax)}
+                    </dd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <dt className="text-sm">Taxes PST</dt>
+                    <dd className="text-sm font-medium text-gray-900">
+                      {formatCurrency(salesPstTax)}
                     </dd>
                   </div>
                   <div className="flex items-center justify-between border-t border-gray-200 pt-6">

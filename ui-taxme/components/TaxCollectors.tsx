@@ -51,7 +51,7 @@ const TaxCollectors = () => {
     error,
     isLoading: collectorsAreLoading,
   } = useMoralisQuery<TaxCollector>(
-    "taxCollectorsC",
+    "taxCollectorsCC",
     (q) => q.descending("createdAt"),
     [],
     {

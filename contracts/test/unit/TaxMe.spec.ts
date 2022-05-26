@@ -23,6 +23,26 @@ import { TaxMe } from "../../typechain/TaxMe"
         CUSDToken = await ethers.getContract("CUSDToken")
       })
 
+      describe("is ownable", () => {
+        it("should be able to transfer ownership", async () => {
+          const owner = await taxMe.owner()
+
+          const [
+            signer,
+            taxCollector,
+            otherTaxCollector,
+            companyAccount,
+            buyer,
+          ] = await ethers.getSigners()
+
+          expect(owner).to.equal(signer.address)
+          const tx = await taxMe.transferOwnership(taxCollector.address)
+          expect(await taxMe.owner()).to.equal(taxCollector.address)
+          await tx.wait()
+          expect(await taxMe.owner()).to.equal(taxCollector.address)
+        })
+      })
+
       describe("register a company", () => {
         it("registers a company", async () => {
           const [
@@ -92,6 +112,24 @@ import { TaxMe } from "../../typechain/TaxMe"
       })
 
       describe("sales", () => {
+        it("calculates taxes on pre-sale", async () => {
+          const [
+            owner,
+            taxCollector,
+            otherTaxCollector,
+            companyAccount,
+            buyer,
+          ]: SignerWithAddress[] = await ethers.getSigners()
+          await taxMe
+            .connect(companyAccount)
+            .registerCompany(city, province, postalCode, province, country, isoCode)
+
+          expect(
+            await taxMe.connect(buyer).preSale(companyAccount.address, "100", "1", "qc", "ca")
+          // ).to.eq([ethers.BigNumber.from(0), ethers.BigNumber.from(0.05)])
+          ).to.have.lengthOf(2)
+        })
+
         it("sales a product", async () => {
           const [
             owner,

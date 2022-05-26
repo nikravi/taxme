@@ -90,6 +90,36 @@ contract TaxMe is Ownable {
     emit CompanyRegistered(msg.sender, addr);
   }
 
+function preSale(
+    address company,
+    uint256 amount,
+    string calldata productCategoryId,
+    string calldata clientState,
+    string calldata clientIsoCountryCode
+  ) view public returns (uint256, uint256)  {
+    if (amount == 0) {
+      revert TaxMe_AmountInsufficient(amount);
+    }
+    if (!stringsEqual(clientIsoCountryCode, "ca")) {
+      revert TaxMe_CountryNotSupported(clientIsoCountryCode);
+    }
+
+    (
+      uint256 regionalTaxAmount,
+      uint256 nationalTaxAmount,
+    ) = _calculateAmounts(
+        company,
+        amount,
+        productCategoryId,
+        clientState
+      );
+
+    return (
+      regionalTaxAmount,
+      nationalTaxAmount
+    );
+  }
+
   function sale(
     address company,
     address token,

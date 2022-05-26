@@ -1,3 +1,3 @@
-export const TaxMeContractAddress = '0xb181e0d3532917910602562b74d79e81047dad7c'
+export const TaxMeContractAddress = '0x7F888B98AC29ceC05e3F5bDbd9A02f692053A36c'
 export const TaxStoreContractAddress = '0x2F2AC134bB8469B049C93880567aE10B8F33a72C'
 export const StoreOwner = '0xe0e9fe5472aa05bda66fbce17ea2820a6d607228'

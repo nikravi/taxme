@@ -21,16 +21,14 @@ const deployFunction: DeployFunction = async ({ getNamedAccounts, deployments })
   ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR)
 
   if (chainId === 31337) {
-    let linkToken = await get(`LinkToken`)
-    let MockOracle = await get(`MockOracle`)
+    // let linkToken = await get(`LinkToken`)
+    // let MockOracle = await get(`MockOracle`)
     // sample ERC20 stable token
     await deploy(`CUSDToken`, {
       from: buyer,
       args: [1000],
     })
 
-
-    // sample ERC20 stable token
     taxStoreContract = await deploy(`MockTaxStore`, {
       from: deployer,
       args: [],

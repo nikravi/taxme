@@ -47,4 +47,4 @@ const deployFunction: DeployFunction = async () => {
 }
 
 export default deployFunction
-deployFunction.tags = [`all`, `mocks`, `main`]
+deployFunction.tags = [`all`, `main`]

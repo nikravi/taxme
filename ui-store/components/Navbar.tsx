@@ -38,7 +38,7 @@ const Navbar = () => {
 
   const [isOwner, setIsOwner] = React.useState(false);
 
-  const { fetch } = useMoralisQuery(
+  const { fetch: fetchCart } = useMoralisQuery(
     "Cart",
     (query) => query.equalTo("userId", user?.id),
     [user?.id],
@@ -48,7 +48,7 @@ const Navbar = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetch({
+      fetchCart({
         onSuccess: (cartFetched) => {
           console.log("cart fetched", cartFetched);
 
@@ -62,7 +62,7 @@ const Navbar = () => {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isWeb3Enabled) {
+    if (isWeb3Enabled && isAuthenticated) {
       getOwner({
         onSuccess: (ownerAddress: string) => {
           console.log({ ownerAddress });
@@ -72,11 +72,12 @@ const Navbar = () => {
           );
         },
         onError: (error) => {
+          debugger
           console.error("error fetching owner", error);
         },
       });
     }
-  }, [isWeb3Enabled]);
+  }, [isWeb3Enabled, isAuthenticated]);
 
   const [navbarItems, setNavbarItems] = React.useState(
     navigation.main.filter((item) => !item.hideTopView)
