@@ -4,6 +4,7 @@
     "dev": "next -p 3000",
     "build": "next build",
     "start": "next start",
+    "export": "next build && next export",
     "type-check": "tsc"
   },
   "dependencies": {

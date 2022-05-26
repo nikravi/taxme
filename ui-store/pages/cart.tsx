@@ -194,7 +194,7 @@ const CartPage = () => {
     }
 
     fetchTaxes();
-  }, [clientAddressForm.province]);
+  }, [clientAddressForm.province, selectedDeliveryMethod]);
 
   useEffect(() => {
     updateSubtotal(cartProducts);
@@ -224,6 +224,7 @@ const CartPage = () => {
     });
     setCartProducts(newCartProducts);
     updateSubtotal(newCartProducts);
+    fetchTaxes()
     cartAddToCart(cart, product.productId, e.target.value);
     cart.save().then(
       (c) => {

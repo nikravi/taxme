@@ -36,7 +36,7 @@ const TaxCollectors = () => {
           console.log({ ownerAddress });
 
           setIsOwner(
-            user?.get("ethAddress").toLowerCase() === ownerAddress.toLowerCase()
+            user?.get("ethAddress")?.toLowerCase() === ownerAddress?.toLowerCase()
           );
         },
         onError: (error) => {
