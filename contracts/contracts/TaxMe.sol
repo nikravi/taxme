@@ -51,7 +51,7 @@ contract TaxMe is Ownable {
     address indexed newTaxCollector
   );
 
-  event Sale (
+  event Sale(
     address indexed company,
     uint256 amount,
     uint256 regionalTaxAmount,
@@ -59,6 +59,7 @@ contract TaxMe is Ownable {
   );
 
   TaxStoreInterface internal immutable taxStore;
+
   constructor(address _taxStore) {
     taxStore = TaxStoreInterface(_taxStore);
   }
@@ -90,13 +91,13 @@ contract TaxMe is Ownable {
     emit CompanyRegistered(msg.sender, addr);
   }
 
-function preSale(
+  function preSale(
     address company,
     uint256 amount,
     string calldata productCategoryId,
     string calldata clientState,
     string calldata clientIsoCountryCode
-  ) view public returns (uint256, uint256)  {
+  ) public view returns (uint256, uint256) {
     if (amount == 0) {
       revert TaxMe_AmountInsufficient(amount);
     }
@@ -104,20 +105,14 @@ function preSale(
       revert TaxMe_CountryNotSupported(clientIsoCountryCode);
     }
 
-    (
-      uint256 regionalTaxAmount,
-      uint256 nationalTaxAmount,
-    ) = _calculateAmounts(
-        company,
-        amount,
-        productCategoryId,
-        clientState
-      );
-
-    return (
-      regionalTaxAmount,
-      nationalTaxAmount
+    (uint256 regionalTaxAmount, uint256 nationalTaxAmount, ) = _calculateAmounts(
+      company,
+      amount,
+      productCategoryId,
+      clientState
     );
+
+    return (regionalTaxAmount, nationalTaxAmount);
   }
 
   function sale(
@@ -139,14 +134,13 @@ function preSale(
       uint256 regionalTaxAmount,
       uint256 nationalTaxAmount,
       _Address memory companyAddress
-    ) = _calculateAmounts(
-        company,
-        amount,
-        productCategoryId,
-        clientState
-      );
+    ) = _calculateAmounts(company, amount, productCategoryId, clientState);
 
-    IERC20(token).safeTransferFrom(msg.sender, address(this), regionalTaxAmount + nationalTaxAmount);
+    IERC20(token).safeTransferFrom(
+      msg.sender,
+      address(this),
+      regionalTaxAmount + nationalTaxAmount
+    );
     _registerCompanyTax(company, companyAddress, regionalTaxAmount, nationalTaxAmount);
 
     // transfer amount after taxes
@@ -203,11 +197,11 @@ function preSale(
       companyAddress
     );
 
-    regionalTaxAmount = (fullAmount * regionalRate / 1000) / 100;
-    nationalTaxAmount = (fullAmount * nationalRate/ 1000) / 100;
+    regionalTaxAmount = ((fullAmount * regionalRate) / 1000) / 100;
+    nationalTaxAmount = ((fullAmount * nationalRate) / 1000) / 100;
     return (regionalTaxAmount, nationalTaxAmount, companyAddress);
   }
- 
+
   function getTaxRates(
     string calldata productCategoryId,
     string calldata clientState,
@@ -216,8 +210,8 @@ function preSale(
     if (!stringsEqual(productCategoryId, "1")) {
       revert TaxMe_ProductCategoryNotSupported(productCategoryId);
     }
-      
-    string memory gst = taxStore.taxes('gst');
+
+    string memory gst = taxStore.taxes("gst");
     string memory pst = taxStore.taxes(companyAddress.state);
 
     nationalRate = stringToUint(gst);
@@ -233,23 +227,23 @@ function preSale(
     return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
   }
 
-  function stringToUint(string memory str) internal pure returns (uint) {
+  function stringToUint(string memory str) internal pure returns (uint256) {
     // from provable lib
     bytes memory bresult = bytes(str);
-    uint mint = 0;
+    uint256 mint = 0;
     // decimals?
-    uint _b = 0;
+    uint256 _b = 0;
     bool decimals = false;
-    for (uint i=0; i<bresult.length; i++){
+    for (uint256 i = 0; i < bresult.length; i++) {
       // using uint8 because the numbers are small < 10000
-        if ((uint8(bresult[i]) >= 48)&&(uint8(bresult[i]) <= 57)){
-            if (decimals){
-                if (_b == 0) break;
-                else _b--;
-            }
-            mint *= 10;
-            mint += uint8(bresult[i]) - 48;
-        } else if (uint8(bresult[i]) == 46) decimals = true;
+      if ((uint8(bresult[i]) >= 48) && (uint8(bresult[i]) <= 57)) {
+        if (decimals) {
+          if (_b == 0) break;
+          else _b--;
+        }
+        mint *= 10;
+        mint += uint8(bresult[i]) - 48;
+      } else if (uint8(bresult[i]) == 46) decimals = true;
     }
     if (_b > 0) mint *= 10**_b;
     return mint;

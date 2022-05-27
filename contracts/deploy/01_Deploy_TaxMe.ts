@@ -14,7 +14,7 @@ const deployFunction: DeployFunction = async ({ getNamedAccounts, deployments })
 
   const chainId: number | undefined = network.config.chainId
   if (!chainId) return
-  let taxStoreContract;
+  let taxStoreContract
 
   let additionalMessage: string = ``
   // set log level to ignore non errors
@@ -35,13 +35,12 @@ const deployFunction: DeployFunction = async ({ getNamedAccounts, deployments })
     })
 
     const taxStore = await ethers.getContract(`MockTaxStore`)
-    const transactionQC  = await taxStore.registerTax('qc', '9975')
+    const transactionQC = await taxStore.registerTax("qc", "9975")
     await transactionQC.wait(1)
-    const transactionON  = await taxStore.registerTax('on', '7000')
+    const transactionON = await taxStore.registerTax("on", "7000")
     await transactionON.wait(1)
-    const transactionGST  = await taxStore.registerTax('gst', '5000')
+    const transactionGST = await taxStore.registerTax("gst", "5000")
     await transactionGST.wait(1)
-
   }
 
   const waitBlockConfirmations: number = developmentChains.includes(network.name)

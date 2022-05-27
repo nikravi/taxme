@@ -27,13 +27,8 @@ import { TaxMe } from "../../typechain/TaxMe"
         it("should be able to transfer ownership", async () => {
           const owner = await taxMe.owner()
 
-          const [
-            signer,
-            taxCollector,
-            otherTaxCollector,
-            companyAccount,
-            buyer,
-          ] = await ethers.getSigners()
+          const [signer, taxCollector, otherTaxCollector, companyAccount, buyer] =
+            await ethers.getSigners()
 
           expect(owner).to.equal(signer.address)
           const tx = await taxMe.transferOwnership(taxCollector.address)
@@ -81,11 +76,8 @@ import { TaxMe } from "../../typechain/TaxMe"
 
       describe("owner adds tax collector", () => {
         it("adds tax collector", async () => {
-          const [
-            signer,
-            taxCollector,
-            otherTaxCollector,
-          ]: SignerWithAddress[] = await ethers.getSigners()
+          const [signer, taxCollector, otherTaxCollector]: SignerWithAddress[] =
+            await ethers.getSigners()
           // console.log(await taxMe.companiesAddresses(signer.address));
           await expect(taxMe.addTaxCollector(province, taxCollector.address))
             .to.emit(taxMe, "UpdateTaxCollector")
@@ -99,11 +91,8 @@ import { TaxMe } from "../../typechain/TaxMe"
         })
 
         it("does not allow setting the tax collector by non-owner", async () => {
-          const [
-            signer,
-            taxCollector,
-            otherTaxCollector,
-          ]: SignerWithAddress[] = await ethers.getSigners()
+          const [signer, taxCollector, otherTaxCollector]: SignerWithAddress[] =
+            await ethers.getSigners()
           await expect(
             // call the function with another account
             taxMe.connect(otherTaxCollector).addTaxCollector(province, taxCollector.address)
@@ -126,7 +115,7 @@ import { TaxMe } from "../../typechain/TaxMe"
 
           expect(
             await taxMe.connect(buyer).preSale(companyAccount.address, "100", "1", "qc", "ca")
-          // ).to.eq([ethers.BigNumber.from(0), ethers.BigNumber.from(0.05)])
+            // ).to.eq([ethers.BigNumber.from(0), ethers.BigNumber.from(0.05)])
           ).to.have.lengthOf(2)
         })
 
